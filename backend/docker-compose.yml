@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: smart-lock-database
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - smart_lock_psql:/var/lib/postgresql/data
+    networks:
+      - web
+
+volumes:
+  smart_lock_psql:
+networks:
+  web:
+    name: smart-lock-web
