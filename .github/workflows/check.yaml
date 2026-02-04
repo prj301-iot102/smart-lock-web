@@ -1,8 +1,6 @@
 on:
   pull_request:
     branches: [main]
-    # paths:
-    #   - 'backend/**'
   workflow_dispatch:
 
 jobs:
@@ -21,4 +19,4 @@ jobs:
         run: diff -u <(echo -n) <(gofmt -d ./)
 
       - name: Check linting
-        run: cd ./general && staticcheck ./...
+        run: cd ./backend && staticcheck ./...
