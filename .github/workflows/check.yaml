@@ -1,0 +1,24 @@
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  check-format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Check formatting
+        run: diff -u <(echo -n) <(gofmt -d ./)
+
+      - name: Check linting
+        run: cd ./general && staticcheck ./...
