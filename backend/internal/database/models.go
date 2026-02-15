@@ -108,10 +108,9 @@ type Employee struct {
 	ID         pgtype.UUID        `json:"id"`
 	UserID     pgtype.UUID        `json:"user_id"`
 	FullName   string             `json:"full_name"`
+	Birth      pgtype.Date        `json:"birth"`
 	NfcTagID   string             `json:"nfc_tag_id"`
 	Department string             `json:"department"`
-	IsActive   bool               `json:"is_active"`
-	EnrolledBy pgtype.UUID        `json:"enrolled_by"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
