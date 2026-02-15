@@ -5,10 +5,127 @@
 package database
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Example struct {
-	ID          int32       `json:"id"`
-	Description pgtype.Text `json:"description"`
+type Action string
+
+const (
+	ActionEnrolled Action = "enrolled"
+	ActionUpdated  Action = "updated"
+	ActionRevoked  Action = "revoked"
+)
+
+func (e *Action) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Action(s)
+	case string:
+		*e = Action(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Action: %T", src)
+	}
+	return nil
+}
+
+type NullAction struct {
+	Action Action `json:"action"`
+	Valid  bool   `json:"valid"` // Valid is true if Action is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAction) Scan(value interface{}) error {
+	if value == nil {
+		ns.Action, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.Action.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAction) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.Action), nil
+}
+
+type Status string
+
+const (
+	StatusGranted Status = "granted"
+	StatusDenied  Status = "denied"
+)
+
+func (e *Status) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Status(s)
+	case string:
+		*e = Status(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Status: %T", src)
+	}
+	return nil
+}
+
+type NullStatus struct {
+	Status Status `json:"status"`
+	Valid  bool   `json:"valid"` // Valid is true if Status is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.Status, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.Status.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.Status), nil
+}
+
+type AccessLog struct {
+	ID         pgtype.UUID        `json:"id"`
+	EmployeeID pgtype.UUID        `json:"employee_id"`
+	Status     Status             `json:"status"`
+	Timestamp  pgtype.Timestamptz `json:"timestamp"`
+}
+
+type Employee struct {
+	ID         pgtype.UUID        `json:"id"`
+	UserID     pgtype.UUID        `json:"user_id"`
+	FullName   string             `json:"full_name"`
+	NfcTagID   string             `json:"nfc_tag_id"`
+	Department string             `json:"department"`
+	IsActive   bool               `json:"is_active"`
+	EnrolledBy pgtype.UUID        `json:"enrolled_by"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+type EnrollmentLog struct {
+	ID         pgtype.UUID        `json:"id"`
+	EmployeeID pgtype.UUID        `json:"employee_id"`
+	Action     Status             `json:"action"`
+	AdminID    pgtype.UUID        `json:"admin_id"`
+	Timestamp  pgtype.Timestamptz `json:"timestamp"`
+}
+
+type User struct {
+	ID        pgtype.UUID        `json:"id"`
+	Username  string             `json:"username"`
+	Password  string             `json:"password"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
