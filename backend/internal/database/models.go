@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -124,8 +125,9 @@ type EnrollmentLog struct {
 }
 
 type User struct {
-	ID        pgtype.UUID        `json:"id"`
-	Username  string             `json:"username"`
-	Password  string             `json:"password"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ID         pgtype.UUID        `json:"id"`
+	Username   string             `json:"username"`
+	Password   string             `json:"password"`
+	EmployeeID uuid.UUID          `json:"employee_id"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
