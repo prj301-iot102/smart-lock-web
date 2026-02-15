@@ -1,13 +1,12 @@
 -- name: CreateEmployee :one
-INSERT INTO employees (user_id, full_name, nfc_tag_id, department)
-VALUES(@user_id, @full_name, @nfc_tag_id, @department)
+INSERT INTO employees (full_name, nfc_tag_id, department)
+VALUES(@full_name, @nfc_tag_id, @department)
 RETURNING id;
 
 -- name: GetEmployeeById :one
-SELECT user_id, full_name, birth, nfc_tag_id, department, employees.created_at, updated_at
+SELECT full_name, birth, nfc_tag_id, department, created_at, updated_at
 FROM employees
-JOIN users ON employees.user_id = users.id
-WHERE employees.id = @id;
+WHERE id = @id;
 
 -- name: UpdateEmployee :exec
 UPDATE employees
