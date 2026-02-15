@@ -124,6 +124,15 @@ type EnrollmentLog struct {
 	Timestamp  pgtype.Timestamptz `json:"timestamp"`
 }
 
+type NfcTag struct {
+	ID         pgtype.UUID        `json:"id"`
+	EmployeeID pgtype.UUID        `json:"employee_id"`
+	NfcTagID   string             `json:"nfc_tag_id"`
+	IsActive   bool               `json:"is_active"`
+	EnrolledBy pgtype.UUID        `json:"enrolled_by"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
 type User struct {
 	ID         pgtype.UUID        `json:"id"`
 	Username   string             `json:"username"`
