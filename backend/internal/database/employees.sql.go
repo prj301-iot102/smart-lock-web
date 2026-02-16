@@ -12,42 +12,32 @@ import (
 )
 
 const createEmployee = `-- name: CreateEmployee :one
-INSERT INTO employees (user_id, full_name, nfc_tag_id, department)
-VALUES($1, $2, $3, $4)
+INSERT INTO employees (full_name, department)
+VALUES($1, $2)
 RETURNING id
 `
 
 type CreateEmployeeParams struct {
-	UserID     pgtype.UUID `json:"user_id"`
-	FullName   string      `json:"full_name"`
-	NfcTagID   string      `json:"nfc_tag_id"`
-	Department string      `json:"department"`
+	FullName   string `json:"full_name"`
+	Department string `json:"department"`
 }
 
 func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, createEmployee,
-		arg.UserID,
-		arg.FullName,
-		arg.NfcTagID,
-		arg.Department,
-	)
+	row := q.db.QueryRow(ctx, createEmployee, arg.FullName, arg.Department)
 	var id pgtype.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
 const getEmployeeById = `-- name: GetEmployeeById :one
-SELECT user_id, full_name, birth, nfc_tag_id, department, employees.created_at, updated_at
+SELECT full_name, birth, department, created_at, updated_at
 FROM employees
-JOIN users ON employees.user_id = users.id
-WHERE employees.id = $1
+WHERE id = $1
 `
 
 type GetEmployeeByIdRow struct {
-	UserID     pgtype.UUID        `json:"user_id"`
 	FullName   string             `json:"full_name"`
 	Birth      pgtype.Date        `json:"birth"`
-	NfcTagID   string             `json:"nfc_tag_id"`
 	Department string             `json:"department"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
@@ -57,10 +47,8 @@ func (q *Queries) GetEmployeeById(ctx context.Context, id pgtype.UUID) (GetEmplo
 	row := q.db.QueryRow(ctx, getEmployeeById, id)
 	var i GetEmployeeByIdRow
 	err := row.Scan(
-		&i.UserID,
 		&i.FullName,
 		&i.Birth,
-		&i.NfcTagID,
 		&i.Department,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -92,22 +80,5 @@ func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) 
 		arg.Department,
 		arg.ID,
 	)
-	return err
-}
-
-const updateTag = `-- name: UpdateTag :exec
-UPDATE employees
-SET
-    nfc_tag_id = COALESCE($1, nfc_tag_id)
-WHERE id = $2
-`
-
-type UpdateTagParams struct {
-	NfcTagID pgtype.Text `json:"nfc_tag_id"`
-	ID       pgtype.UUID `json:"id"`
-}
-
-func (q *Queries) UpdateTag(ctx context.Context, arg UpdateTagParams) error {
-	_, err := q.db.Exec(ctx, updateTag, arg.NfcTagID, arg.ID)
 	return err
 }

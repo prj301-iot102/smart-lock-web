@@ -30,20 +30,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (pgtype.
 }
 
 const getAccountByUsername = `-- name: GetAccountByUsername :one
-SELECT password, e.full_name
+SELECT password
 FROM users u
-JOIN employees e ON e.id = u.employee_id
 WHERE username = $1
 `
 
-type GetAccountByUsernameRow struct {
-	Password string `json:"password"`
-	FullName string `json:"full_name"`
-}
-
-func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (GetAccountByUsernameRow, error) {
+func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (string, error) {
 	row := q.db.QueryRow(ctx, getAccountByUsername, username)
-	var i GetAccountByUsernameRow
-	err := row.Scan(&i.Password, &i.FullName)
-	return i, err
+	var password string
+	err := row.Scan(&password)
+	return password, err
 }

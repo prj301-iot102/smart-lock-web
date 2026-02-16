@@ -15,9 +15,9 @@ import (
 type Action string
 
 const (
-	ActionEnrolled Action = "enrolled"
-	ActionUpdated  Action = "updated"
-	ActionRevoked  Action = "revoked"
+	ActionEnroll Action = "enroll"
+	ActionUpdat  Action = "updat"
+	ActionRevok  Action = "revok"
 )
 
 func (e *Action) Scan(src interface{}) error {
@@ -100,16 +100,15 @@ func (ns NullStatus) Value() (driver.Value, error) {
 type AccessLog struct {
 	ID         pgtype.UUID        `json:"id"`
 	EmployeeID pgtype.UUID        `json:"employee_id"`
+	NfcTagID   pgtype.UUID        `json:"nfc_tag_id"`
 	Status     Status             `json:"status"`
 	Timestamp  pgtype.Timestamptz `json:"timestamp"`
 }
 
 type Employee struct {
 	ID         pgtype.UUID        `json:"id"`
-	UserID     pgtype.UUID        `json:"user_id"`
 	FullName   string             `json:"full_name"`
 	Birth      pgtype.Date        `json:"birth"`
-	NfcTagID   string             `json:"nfc_tag_id"`
 	Department string             `json:"department"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
@@ -118,6 +117,7 @@ type Employee struct {
 type EnrollmentLog struct {
 	ID         pgtype.UUID        `json:"id"`
 	EmployeeID pgtype.UUID        `json:"employee_id"`
+	NfcTagUid  string             `json:"nfc_tag_uid"`
 	Action     Status             `json:"action"`
 	AdminID    pgtype.UUID        `json:"admin_id"`
 	Timestamp  pgtype.Timestamptz `json:"timestamp"`
@@ -125,8 +125,8 @@ type EnrollmentLog struct {
 
 type NfcTag struct {
 	ID         pgtype.UUID        `json:"id"`
+	Uid        string             `json:"uid"`
 	EmployeeID pgtype.UUID        `json:"employee_id"`
-	NfcTagID   string             `json:"nfc_tag_id"`
 	IsActive   bool               `json:"is_active"`
 	EnrolledBy pgtype.UUID        `json:"enrolled_by"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
