@@ -1,6 +1,6 @@
 -- name: CreateNfcTag :one
-INSERT INTO nfc_tags (employee_id, nfc_tag_id, is_active, enrolled_by)
-VALUES(@employee_id, @nfc_tag_id, @is_active, @enrolled_by)
+INSERT INTO nfc_tags (employee_id, uid, is_active, enrolled_by)
+VALUES(@employee_id, @uid, @is_active, @enrolled_by)
 RETURNING id;
 
 -- name: UpdateTagStatus :exec
@@ -17,7 +17,7 @@ JOIN users ON users.id = nfc_tags.enrolled_by
 WHERE nfc_tags.id = @id;
 
 -- name: FilterTags :many
-SELECT nfc_tags.nfc_tag_id, employees.full_name, is_active, nfc_tags.created_at
+SELECT nfc_tags.uid, employees.full_name, is_active, nfc_tags.created_at
 FROM nfc_tags
 JOIN employees ON employees.id = nfc_tags.employee_id
 WHERE
