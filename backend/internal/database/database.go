@@ -16,6 +16,9 @@ import (
 var instance *pgxpool.Pool
 
 func NewPool() *pgxpool.Pool {
+	if instance != nil {
+		return instance
+	}
 	ctx := context.Background()
 
 	cfg, _ := env.ParseAs[config.Database]()
@@ -27,7 +30,7 @@ func NewPool() *pgxpool.Pool {
 
 	instance, err := pgxpool.NewWithConfig(ctx, pgxConfig)
 	if err != nil {
-		fmt.Errorf("Unable to connect to database: %v\n", err)
+		fmt.Printf("Unable to connect to database: %v\n", err)
 	}
 
 	if err = instance.Ping(ctx); err != nil {
