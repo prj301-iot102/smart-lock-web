@@ -7,11 +7,11 @@ CREATE TYPE result AS ENUM ('accepted', 'rejected', 'existed')
 CREATE TABLE enrollment_logs (
     id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
     employee_id uuid NOT NULL REFERENCES employees(id),
-	nfc_tag_uid text NOT NULL,
+    nfc_tag_uid text NOT NULL,
     action status NOT NULL,
-	result result NOT NULL,
+    result result NOT NULL,
     admin_id uuid NOT NULL REFERENCES users(id),
-    timestamp timestamptz NOT NULL DEFAULT now()
+    created_at timestamptz NOT NULL DEFAULT now()
 );
 
 -- +goose Down
