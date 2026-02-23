@@ -1,7 +1,7 @@
 -- +goose Up
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE action AS ENUM ('enroll', 'update', 'revok');
+CREATE TYPE action AS ENUM ('enroll', 'update', 'revoke');
 CREATE TYPE result AS ENUM ('accepted', 'rejected', 'existed')
 
 CREATE TABLE enrollment_logs (
