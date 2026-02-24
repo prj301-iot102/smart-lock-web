@@ -1,8 +1,8 @@
 -- +goose Up
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE action AS ENUM ('enroll', 'update', 'revoke');
-CREATE TYPE result AS ENUM ('accepted', 'rejected', 'existed')
+CREATE TYPE action AS ENUM ('enroll', 'update', 'revoke', 'delete');
+CREATE TYPE result AS ENUM ('accepted', 'rejected', 'existed');
 
 CREATE TABLE enrollment_logs (
     id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
