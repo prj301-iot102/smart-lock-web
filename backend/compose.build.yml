@@ -1,0 +1,6 @@
+services:
+  smart_lock_api:
+    image: ${REGISTRY}/backend:latest
+    build:
+      context: ..
+      dockerfile: cmd/api/Dockerfile
