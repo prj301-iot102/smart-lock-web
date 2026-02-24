@@ -3,4 +3,4 @@ services:
     image: ${REGISTRY}/backend:latest
     build:
       context: ..
-      dockerfile: cmd/api/Dockerfile
+      dockerfile: backend/cmd/api/Dockerfile
