@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o main cmd/server/main.go
+RUN go build -o main cmd/api/main.go
 
 FROM alpine:latest AS prod
 WORKDIR /app
