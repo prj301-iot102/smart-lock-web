@@ -2,5 +2,4 @@ services:
   smart_lock_api:
     image: ${REGISTRY}/backend:latest
     build:
-      context: backend
       dockerfile: cmd/api/Dockerfile
