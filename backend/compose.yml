@@ -21,3 +21,4 @@ volumes:
 networks:
   web:
     name: smart-lock-web
+    external: true
