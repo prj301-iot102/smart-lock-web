@@ -25,5 +25,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push image
         run: |
-          docker compose -f compose.build.yaml build
-          docker compose -f compose.build.yaml push
+          docker compose -f compose.build.yml build
+          docker compose -f compose.build.yml push
