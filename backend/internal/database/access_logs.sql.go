@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -18,13 +19,13 @@ RETURNING id
 `
 
 type CreateAccessLogParams struct {
-	EmployeeID pgtype.UUID `json:"employee_id"`
-	Status     Status      `json:"status"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+	Status     Status    `json:"status"`
 }
 
-func (q *Queries) CreateAccessLog(ctx context.Context, arg CreateAccessLogParams) (pgtype.UUID, error) {
+func (q *Queries) CreateAccessLog(ctx context.Context, arg CreateAccessLogParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createAccessLog, arg.EmployeeID, arg.Status)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -38,7 +39,7 @@ ORDER BY al.created_at DESC
 `
 
 type GetAccessLogsRow struct {
-	ID        pgtype.UUID        `json:"id"`
+	ID        uuid.UUID          `json:"id"`
 	FullName  string             `json:"full_name"`
 	Uid       string             `json:"uid"`
 	Status    Status             `json:"status"`

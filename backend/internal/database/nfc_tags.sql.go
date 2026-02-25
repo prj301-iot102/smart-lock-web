@@ -19,20 +19,20 @@ RETURNING id
 `
 
 type CreateNfcTagParams struct {
-	EmployeeID pgtype.UUID `json:"employee_id"`
-	Uid        string      `json:"uid"`
-	IsActive   bool        `json:"is_active"`
-	EnrolledBy pgtype.UUID `json:"enrolled_by"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+	Uid        string    `json:"uid"`
+	IsActive   bool      `json:"is_active"`
+	EnrolledBy uuid.UUID `json:"enrolled_by"`
 }
 
-func (q *Queries) CreateNfcTag(ctx context.Context, arg CreateNfcTagParams) (pgtype.UUID, error) {
+func (q *Queries) CreateNfcTag(ctx context.Context, arg CreateNfcTagParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createNfcTag,
 		arg.EmployeeID,
 		arg.Uid,
 		arg.IsActive,
 		arg.EnrolledBy,
 	)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -88,27 +88,27 @@ WHERE nfc_tags.id = $1
 `
 
 type GetTagByIdRow struct {
-	ID           pgtype.UUID        `json:"id"`
+	ID           uuid.UUID          `json:"id"`
 	Uid          string             `json:"uid"`
-	EmployeeID   pgtype.UUID        `json:"employee_id"`
+	EmployeeID   uuid.UUID          `json:"employee_id"`
 	IsActive     bool               `json:"is_active"`
-	EnrolledBy   pgtype.UUID        `json:"enrolled_by"`
+	EnrolledBy   uuid.UUID          `json:"enrolled_by"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	ID_2         pgtype.UUID        `json:"id_2"`
-	RoleID       pgtype.UUID        `json:"role_id"`
+	ID_2         uuid.UUID          `json:"id_2"`
+	RoleID       uuid.UUID          `json:"role_id"`
 	FullName     string             `json:"full_name"`
 	Birth        pgtype.Date        `json:"birth"`
 	Department   string             `json:"department"`
 	CreatedAt_2  pgtype.Timestamptz `json:"created_at_2"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-	ID_3         pgtype.UUID        `json:"id_3"`
+	ID_3         uuid.UUID          `json:"id_3"`
 	Username     string             `json:"username"`
 	Password     string             `json:"password"`
 	EmployeeID_2 uuid.UUID          `json:"employee_id_2"`
 	CreatedAt_3  pgtype.Timestamptz `json:"created_at_3"`
 }
 
-func (q *Queries) GetTagById(ctx context.Context, id pgtype.UUID) (GetTagByIdRow, error) {
+func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, error) {
 	row := q.db.QueryRow(ctx, getTagById, id)
 	var i GetTagByIdRow
 	err := row.Scan(
@@ -143,7 +143,7 @@ WHERE id = $2
 
 type UpdateTagStatusParams struct {
 	IsActive pgtype.Bool `json:"is_active"`
-	ID       pgtype.UUID `json:"id"`
+	ID       uuid.UUID   `json:"id"`
 }
 
 func (q *Queries) UpdateTagStatus(ctx context.Context, arg UpdateTagStatusParams) error {

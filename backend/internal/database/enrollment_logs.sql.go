@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -18,20 +19,20 @@ RETURNING id
 `
 
 type CreateEnrollmentLogsParams struct {
-	EmployeeID pgtype.UUID `json:"employee_id"`
-	NfcTagUid  string      `json:"nfc_tag_uid"`
-	Action     Status      `json:"action"`
-	AdminID    pgtype.UUID `json:"admin_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+	NfcTagUid  string    `json:"nfc_tag_uid"`
+	Action     Status    `json:"action"`
+	AdminID    uuid.UUID `json:"admin_id"`
 }
 
-func (q *Queries) CreateEnrollmentLogs(ctx context.Context, arg CreateEnrollmentLogsParams) (pgtype.UUID, error) {
+func (q *Queries) CreateEnrollmentLogs(ctx context.Context, arg CreateEnrollmentLogsParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createEnrollmentLogs,
 		arg.EmployeeID,
 		arg.NfcTagUid,
 		arg.Action,
 		arg.AdminID,
 	)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -45,7 +46,7 @@ ORDER BY el.created_at DESC
 `
 
 type GetEnrollmentLogsRow struct {
-	ID        pgtype.UUID        `json:"id"`
+	ID        uuid.UUID          `json:"id"`
 	FullName  string             `json:"full_name"`
 	NfcTagUid string             `json:"nfc_tag_uid"`
 	Action    Status             `json:"action"`

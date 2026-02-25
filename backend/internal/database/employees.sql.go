@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -22,9 +23,9 @@ type CreateEmployeeParams struct {
 	Department string `json:"department"`
 }
 
-func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (pgtype.UUID, error) {
+func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createEmployee, arg.FullName, arg.Department)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
@@ -43,7 +44,7 @@ type GetEmployeeByIdRow struct {
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
 
-func (q *Queries) GetEmployeeById(ctx context.Context, id pgtype.UUID) (GetEmployeeByIdRow, error) {
+func (q *Queries) GetEmployeeById(ctx context.Context, id uuid.UUID) (GetEmployeeByIdRow, error) {
 	row := q.db.QueryRow(ctx, getEmployeeById, id)
 	var i GetEmployeeByIdRow
 	err := row.Scan(
@@ -70,7 +71,7 @@ type UpdateEmployeeParams struct {
 	FullName   pgtype.Text `json:"full_name"`
 	Birth      pgtype.Date `json:"birth"`
 	Department pgtype.Text `json:"department"`
-	ID         pgtype.UUID `json:"id"`
+	ID         uuid.UUID   `json:"id"`
 }
 
 func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error {
