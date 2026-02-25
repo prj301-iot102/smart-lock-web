@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: smart-lock-database
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - smart_lock_psql:/var/lib/postgresql/data
+    networks:
+      - web
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    container_name: course-sphere-cloudbeaver
+    restart: on-failure:5
+    ports:
+      - 8978:8978
+    volumes:
+      - cloudbeaver:/opt/cloudbeaver/workspace
+    networks:
+      - web
+
+volumes:
+  smart_lock_psql:
+  cloudbeaver:
+networks:
+  web:
+    name: smart-lock-web
+    external: true
