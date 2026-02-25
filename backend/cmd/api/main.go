@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/go-fuego/fuego"
-	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
-	"github.com/prj301-iot102/smart-lock-web/backend/internal/handlers"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/server"
 )
 
@@ -41,20 +39,8 @@ func gracefulShutdown(apiServer *fuego.Server, done chan bool) {
 }
 
 func main() {
-	db := database.NewPool()
-	defer db.Close()
-
-	database := database.New(db)
-
-	_ = database
-
-	apiResource := handlers.Resource{}
-
-	rs := server.Resource{
-		API: apiResource,
-	}
-
-	server := rs.NewServer()
+	server, cleanup := server.NewServer()
+	defer cleanup()
 
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)

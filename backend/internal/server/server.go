@@ -7,16 +7,17 @@ import (
 	"github.com/go-fuego/fuego"
 	_ "github.com/joho/godotenv/autoload"
 
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/auth"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/config"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/handlers"
 	// middleware "github.com/prj301-iot102/smart-lock-web/backend/internal/server/middlewares"
 )
 
-type Resource struct {
-	API handlers.Resource
-}
+func NewServer() (*fuego.Server, func()) {
+	db := database.NewPool()
+	jwt := auth.NewJwtAuth()
 
-func (rs Resource) NewServer() *fuego.Server {
 	serverCfg, _ := env.ParseAs[config.Server]()
 
 	server := fuego.NewServer(
@@ -30,7 +31,8 @@ func (rs Resource) NewServer() *fuego.Server {
 		),
 	)
 
-	rs.API.MountRoutes(fuego.Group(server, "/api"))
+	handlers.AuthRoutes(server, db, jwt)
+	cleanup := func() { db.Close() }
 
-	return server
+	return server, cleanup
 }
