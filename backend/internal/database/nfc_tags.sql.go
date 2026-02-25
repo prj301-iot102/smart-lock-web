@@ -80,7 +80,7 @@ func (q *Queries) FilterTags(ctx context.Context, isActive pgtype.Bool) ([]Filte
 }
 
 const getTagById = `-- name: GetTagById :one
-SELECT nfc_tags.id, uid, nfc_tags.employee_id, is_active, enrolled_by, nfc_tags.created_at, employees.id, full_name, birth, department, employees.created_at, updated_at, users.id, username, password, users.employee_id, users.created_at
+SELECT nfc_tags.id, uid, nfc_tags.employee_id, is_active, enrolled_by, nfc_tags.created_at, employees.id, role_id, full_name, birth, department, employees.created_at, updated_at, users.id, username, password, users.employee_id, users.created_at
 FROM nfc_tags
 JOIN employees ON employees.id = nfc_tags.employee_id
 JOIN users ON users.id = nfc_tags.enrolled_by
@@ -95,6 +95,7 @@ type GetTagByIdRow struct {
 	EnrolledBy   pgtype.UUID        `json:"enrolled_by"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	ID_2         pgtype.UUID        `json:"id_2"`
+	RoleID       pgtype.UUID        `json:"role_id"`
 	FullName     string             `json:"full_name"`
 	Birth        pgtype.Date        `json:"birth"`
 	Department   string             `json:"department"`
@@ -118,6 +119,7 @@ func (q *Queries) GetTagById(ctx context.Context, id pgtype.UUID) (GetTagByIdRow
 		&i.EnrolledBy,
 		&i.CreatedAt,
 		&i.ID_2,
+		&i.RoleID,
 		&i.FullName,
 		&i.Birth,
 		&i.Department,

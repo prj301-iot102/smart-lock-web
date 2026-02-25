@@ -37,11 +37,11 @@ func (q *Queries) CreateEnrollmentLogs(ctx context.Context, arg CreateEnrollment
 }
 
 const getEnrollmentLogs = `-- name: GetEnrollmentLogs :many
-SELECT el.id, e.full_name, el.nfc_tag_uid, el.action, el.timestamp
+SELECT el.id, e.full_name, el.nfc_tag_uid, el.action, el.created_at
 FROM enrollment_logs el
 JOIN employees e ON e.id = el.employee_id
 JOIN users u ON u.id = el.employee_id
-ORDER BY el.timestamp DESC
+ORDER BY el.created_at DESC
 `
 
 type GetEnrollmentLogsRow struct {
@@ -49,7 +49,7 @@ type GetEnrollmentLogsRow struct {
 	FullName  string             `json:"full_name"`
 	NfcTagUid string             `json:"nfc_tag_uid"`
 	Action    Status             `json:"action"`
-	Timestamp pgtype.Timestamptz `json:"timestamp"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 func (q *Queries) GetEnrollmentLogs(ctx context.Context) ([]GetEnrollmentLogsRow, error) {
@@ -66,7 +66,7 @@ func (q *Queries) GetEnrollmentLogs(ctx context.Context) ([]GetEnrollmentLogsRow
 			&i.FullName,
 			&i.NfcTagUid,
 			&i.Action,
-			&i.Timestamp,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

@@ -30,11 +30,11 @@ func (q *Queries) CreateAccessLog(ctx context.Context, arg CreateAccessLogParams
 }
 
 const getAccessLogs = `-- name: GetAccessLogs :many
-SELECT al.id, e.full_name, nt.uid, al.status, al.timestamp
+SELECT al.id, e.full_name, nt.uid, al.status, al.created_at
 FROM access_logs al
 JOIN employees e ON e.id = al.employee_id
 JOIN nfc_tags nt ON nt.id = al.nfc_tag_id
-ORDER BY al.timestamp DESC
+ORDER BY al.created_at DESC
 `
 
 type GetAccessLogsRow struct {
@@ -42,7 +42,7 @@ type GetAccessLogsRow struct {
 	FullName  string             `json:"full_name"`
 	Uid       string             `json:"uid"`
 	Status    Status             `json:"status"`
-	Timestamp pgtype.Timestamptz `json:"timestamp"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 func (q *Queries) GetAccessLogs(ctx context.Context) ([]GetAccessLogsRow, error) {
@@ -59,7 +59,7 @@ func (q *Queries) GetAccessLogs(ctx context.Context) ([]GetAccessLogsRow, error)
 			&i.FullName,
 			&i.Uid,
 			&i.Status,
-			&i.Timestamp,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
