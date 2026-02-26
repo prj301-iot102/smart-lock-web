@@ -4,11 +4,12 @@ services:
     container_name: smart-lock-database
     restart: unless-stopped
     environment:
+      PGDATA: /var/lib/postgresql/18/docker
       POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - smart_lock_psql:/var/lib/postgresql/data
+      - smart_lock_psql:/var/lib/postgresql
     networks:
       - web
   cloudbeaver:
