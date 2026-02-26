@@ -39,13 +39,13 @@ jobs:
     env:
       REGISTRY: ghcr.io/${{ github.repository }}
 
-      DB_DATABASE: ${secrets.DB_DATABASE}
-      DB_USERNAME: ${secrets.DB_USERNAME}
-      DB_PASSWORD: ${secrets.DB_PASSWORD}
-      DB_PORT: ${secrets.DB_PORT}
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_PORT: ${{ secrets.DB_PORT }}
 
-      JWT_SECRET: ${secrets.JWT_SECRET}
-      JWT_EXPIRES_IN: ${secrets.JWT_EXPIRES_IN}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRES_IN: ${ secrets.JWT_EXPIRES_IN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
