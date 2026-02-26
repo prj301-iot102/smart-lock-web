@@ -3,8 +3,6 @@ services:
     image: postgres:latest
     container_name: smart-lock-database
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_USER: ${DB_USERNAME}
