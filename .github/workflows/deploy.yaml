@@ -56,6 +56,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Clean containers, image
-        run: docker compose -f backend/compose.yml -p smart-lock-backend --rmi all -v
+        run: docker compose -f backend/compose.yml -p smart-lock-backend down --rmi all -v
       - name: Deploy
         run: docker compose -f backend/compose.yml -p smart-lock-backend up -d
