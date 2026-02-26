@@ -9,15 +9,41 @@ services:
       POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "${DB_PORT}:5432"
     volumes:
       - smart_lock_psql:/var/lib/postgresql/data
+    networks:
+      - web
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    container_name: smart-lock-cloudbeaver
+    restart: on-failure:5
+    ports:
+      - 8978:8978
+    volumes:
+      - cloudbeaver:/opt/cloudbeaver/workspace
+    networks:
+      - web
+  backend:
+    image: ${REGISTRY}/backend:latest
+    container_name: smart-lock-backend
+    restart: on-failure:5
+    depends_on:
+      - postgres
+    environment:
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
     networks:
       - web
 
 volumes:
   smart_lock_psql:
+  cloudbeaver:
 networks:
   web:
     name: smart-lock-web
