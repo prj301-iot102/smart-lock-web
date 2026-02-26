@@ -16,8 +16,9 @@ type Action string
 
 const (
 	ActionEnroll Action = "enroll"
-	ActionUpdat  Action = "updat"
-	ActionRevok  Action = "revok"
+	ActionUpdate Action = "update"
+	ActionRevoke Action = "revoke"
+	ActionDelete Action = "delete"
 )
 
 func (e *Action) Scan(src interface{}) error {
@@ -53,6 +54,49 @@ func (ns NullAction) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.Action), nil
+}
+
+type Result string
+
+const (
+	ResultAccepted Result = "accepted"
+	ResultRejected Result = "rejected"
+	ResultExisted  Result = "existed"
+)
+
+func (e *Result) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Result(s)
+	case string:
+		*e = Result(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Result: %T", src)
+	}
+	return nil
+}
+
+type NullResult struct {
+	Result Result `json:"result"`
+	Valid  bool   `json:"valid"` // Valid is true if Result is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullResult) Scan(value interface{}) error {
+	if value == nil {
+		ns.Result, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.Result.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullResult) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.Result), nil
 }
 
 type Status string
@@ -98,15 +142,31 @@ func (ns NullStatus) Value() (driver.Value, error) {
 }
 
 type AccessLog struct {
-	ID         pgtype.UUID        `json:"id"`
-	EmployeeID pgtype.UUID        `json:"employee_id"`
-	NfcTagID   pgtype.UUID        `json:"nfc_tag_id"`
+	ID         uuid.UUID          `json:"id"`
+	EmployeeID uuid.UUID          `json:"employee_id"`
+	DoorID     uuid.UUID          `json:"door_id"`
+	NfcTagID   uuid.UUID          `json:"nfc_tag_id"`
 	Status     Status             `json:"status"`
-	Timestamp  pgtype.Timestamptz `json:"timestamp"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type Door struct {
+	ID        uuid.UUID          `json:"id"`
+	DoorName  string             `json:"door_name"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type DoorPermisson struct {
+	ID        uuid.UUID          `json:"id"`
+	DoorID    uuid.UUID          `json:"door_id"`
+	RoleID    uuid.UUID          `json:"role_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type Employee struct {
-	ID         pgtype.UUID        `json:"id"`
+	ID         uuid.UUID          `json:"id"`
+	RoleID     uuid.UUID          `json:"role_id"`
 	FullName   string             `json:"full_name"`
 	Birth      pgtype.Date        `json:"birth"`
 	Department string             `json:"department"`
@@ -115,25 +175,32 @@ type Employee struct {
 }
 
 type EnrollmentLog struct {
-	ID         pgtype.UUID        `json:"id"`
-	EmployeeID pgtype.UUID        `json:"employee_id"`
+	ID         uuid.UUID          `json:"id"`
+	EmployeeID uuid.UUID          `json:"employee_id"`
 	NfcTagUid  string             `json:"nfc_tag_uid"`
 	Action     Status             `json:"action"`
-	AdminID    pgtype.UUID        `json:"admin_id"`
-	Timestamp  pgtype.Timestamptz `json:"timestamp"`
-}
-
-type NfcTag struct {
-	ID         pgtype.UUID        `json:"id"`
-	Uid        string             `json:"uid"`
-	EmployeeID pgtype.UUID        `json:"employee_id"`
-	IsActive   bool               `json:"is_active"`
-	EnrolledBy pgtype.UUID        `json:"enrolled_by"`
+	Result     Result             `json:"result"`
+	AdminID    uuid.UUID          `json:"admin_id"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
+type NfcTag struct {
+	ID         uuid.UUID          `json:"id"`
+	Uid        string             `json:"uid"`
+	EmployeeID uuid.UUID          `json:"employee_id"`
+	IsActive   bool               `json:"is_active"`
+	EnrolledBy uuid.UUID          `json:"enrolled_by"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type Role struct {
+	ID        uuid.UUID          `json:"id"`
+	RoleName  string             `json:"role_name"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type User struct {
-	ID         pgtype.UUID        `json:"id"`
+	ID         uuid.UUID          `json:"id"`
 	Username   string             `json:"username"`
 	Password   string             `json:"password"`
 	EmployeeID uuid.UUID          `json:"employee_id"`

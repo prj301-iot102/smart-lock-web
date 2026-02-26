@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -18,38 +19,38 @@ RETURNING id
 `
 
 type CreateEnrollmentLogsParams struct {
-	EmployeeID pgtype.UUID `json:"employee_id"`
-	NfcTagUid  string      `json:"nfc_tag_uid"`
-	Action     Status      `json:"action"`
-	AdminID    pgtype.UUID `json:"admin_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+	NfcTagUid  string    `json:"nfc_tag_uid"`
+	Action     Status    `json:"action"`
+	AdminID    uuid.UUID `json:"admin_id"`
 }
 
-func (q *Queries) CreateEnrollmentLogs(ctx context.Context, arg CreateEnrollmentLogsParams) (pgtype.UUID, error) {
+func (q *Queries) CreateEnrollmentLogs(ctx context.Context, arg CreateEnrollmentLogsParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createEnrollmentLogs,
 		arg.EmployeeID,
 		arg.NfcTagUid,
 		arg.Action,
 		arg.AdminID,
 	)
-	var id pgtype.UUID
+	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
 const getEnrollmentLogs = `-- name: GetEnrollmentLogs :many
-SELECT el.id, e.full_name, el.nfc_tag_uid, el.action, el.timestamp
+SELECT el.id, e.full_name, el.nfc_tag_uid, el.action, el.created_at
 FROM enrollment_logs el
 JOIN employees e ON e.id = el.employee_id
 JOIN users u ON u.id = el.employee_id
-ORDER BY el.timestamp DESC
+ORDER BY el.created_at DESC
 `
 
 type GetEnrollmentLogsRow struct {
-	ID        pgtype.UUID        `json:"id"`
+	ID        uuid.UUID          `json:"id"`
 	FullName  string             `json:"full_name"`
 	NfcTagUid string             `json:"nfc_tag_uid"`
 	Action    Status             `json:"action"`
-	Timestamp pgtype.Timestamptz `json:"timestamp"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 func (q *Queries) GetEnrollmentLogs(ctx context.Context) ([]GetEnrollmentLogsRow, error) {
@@ -66,7 +67,7 @@ func (q *Queries) GetEnrollmentLogs(ctx context.Context) ([]GetEnrollmentLogsRow
 			&i.FullName,
 			&i.NfcTagUid,
 			&i.Action,
-			&i.Timestamp,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
