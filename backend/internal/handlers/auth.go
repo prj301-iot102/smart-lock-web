@@ -66,7 +66,7 @@ func AuthRoutes(s *fuego.Server, db *pgxpool.Pool, jwt *auth.JwtAuth) {
 		jwt: jwt,
 	}
 
-	group := fuego.Group(s, "/auth")
+	group := fuego.Group(s, "/api/auth")
 	// fuego.Post(group, "/register", rs.Register)
 	fuego.Post(group, "/login", rs.Login)
 }
