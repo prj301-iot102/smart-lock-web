@@ -178,7 +178,7 @@ type EnrollmentLog struct {
 	ID         uuid.UUID          `json:"id"`
 	EmployeeID uuid.UUID          `json:"employee_id"`
 	NfcTagUid  string             `json:"nfc_tag_uid"`
-	Action     Status             `json:"action"`
+	Action     Action             `json:"action"`
 	Result     Result             `json:"result"`
 	AdminID    uuid.UUID          `json:"admin_id"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`

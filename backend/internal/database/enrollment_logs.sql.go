@@ -21,7 +21,7 @@ RETURNING id
 type CreateEnrollmentLogsParams struct {
 	EmployeeID uuid.UUID `json:"employee_id"`
 	NfcTagUid  string    `json:"nfc_tag_uid"`
-	Action     Status    `json:"action"`
+	Action     Action    `json:"action"`
 	AdminID    uuid.UUID `json:"admin_id"`
 }
 
@@ -49,7 +49,7 @@ type GetEnrollmentLogsRow struct {
 	ID        uuid.UUID          `json:"id"`
 	FullName  string             `json:"full_name"`
 	NfcTagUid string             `json:"nfc_tag_uid"`
-	Action    Status             `json:"action"`
+	Action    Action             `json:"action"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
