@@ -17,3 +17,4 @@ CREATE TABLE enrollment_logs (
 -- +goose Down
 DROP TABLE enrollment_logs;
 DROP TYPE action;
+DROP TYPE result;
