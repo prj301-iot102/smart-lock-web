@@ -13,7 +13,7 @@ services:
     ports:
       - "${DB_PORT}:5432"
     volumes:
-      - smart_lock_psql:/var/lib/postgresql/data
+      - smart_lock_psql:/var/lib/postgresql
     networks:
       - web
   cloudbeaver:
