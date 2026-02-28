@@ -35,6 +35,29 @@ func (nr *NfcResource) GetNfc(c fuego.ContextNoBody) (database.GetTagByIdRow, er
 	return nfc, nil
 }
 
+func (nr *NfcResource) RevokeNfc(c fuego.ContextNoBody) (bool, error) {
+	nfc_id, err := uuid.Parse(c.PathParam("id"))
+	if err != nil {
+		return false, fuego.BadRequestError{
+			Detail: "Invalid uuid",
+		}
+	}
+
+	ctx := context.Background()
+	queries := database.New(nr.db)
+	_, err = queries.UpdateTagStatus(ctx, database.UpdateTagStatusParams{
+		IsActive: false,
+		ID:       nfc_id,
+	})
+	if err != nil {
+		return false, fuego.BadRequestError{
+			Detail: "Nfc is inactive",
+		}
+	}
+
+	return true, nil
+}
+
 func NfcRoute(s *fuego.Server, db *pgxpool.Pool) {
 	rs := NfcResource{
 		db: db,
@@ -43,5 +66,5 @@ func NfcRoute(s *fuego.Server, db *pgxpool.Pool) {
 	group := fuego.Group(s, "/api/nfc")
 
 	fuego.Get(group, "/{id}", rs.GetNfc)
-
+	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc)
 }
