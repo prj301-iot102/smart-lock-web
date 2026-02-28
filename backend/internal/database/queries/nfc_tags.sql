@@ -3,11 +3,12 @@ INSERT INTO nfc_tags (employee_id, uid, is_active, enrolled_by)
 VALUES(@employee_id, @uid, @is_active, @enrolled_by)
 RETURNING id;
 
--- name: UpdateTagStatus :exec
+-- name: UpdateTagStatus :one
 UPDATE nfc_tags
 SET
-    is_active = COALESCE(sqlc.narg('is_active'), is_active)
-WHERE id = @id;
+    is_active = @is_active
+WHERE id = @id AND is_active = true
+RETURNING id;
 
 -- name: GetTagById :one
 SELECT nt.id, nt.uid, nt.is_active, e.full_name, u.username, nt.created_at, nt.updated_at

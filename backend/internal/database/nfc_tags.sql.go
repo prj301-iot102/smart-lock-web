@@ -112,19 +112,22 @@ func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, 
 	return i, err
 }
 
-const updateTagStatus = `-- name: UpdateTagStatus :exec
+const updateTagStatus = `-- name: UpdateTagStatus :one
 UPDATE nfc_tags
 SET
-    is_active = COALESCE($1, is_active)
-WHERE id = $2
+    is_active = $1
+WHERE id = $2 AND is_active = true
+RETURNING id
 `
 
 type UpdateTagStatusParams struct {
-	IsActive pgtype.Bool `json:"is_active"`
-	ID       uuid.UUID   `json:"id"`
+	IsActive bool      `json:"is_active"`
+	ID       uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateTagStatus(ctx context.Context, arg UpdateTagStatusParams) error {
-	_, err := q.db.Exec(ctx, updateTagStatus, arg.IsActive, arg.ID)
-	return err
+func (q *Queries) UpdateTagStatus(ctx context.Context, arg UpdateTagStatusParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, updateTagStatus, arg.IsActive, arg.ID)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
