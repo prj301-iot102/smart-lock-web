@@ -10,11 +10,11 @@ SET
 WHERE id = @id;
 
 -- name: GetTagById :one
-SELECT *
-FROM nfc_tags
-JOIN employees ON employees.id = nfc_tags.employee_id
-JOIN users ON users.id = nfc_tags.enrolled_by
-WHERE nfc_tags.id = @id;
+SELECT nt.id, nt.uid, nt.is_active, e.full_name, u.username, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+JOIN users u ON u.id = nt.enrolled_by
+WHERE nt.id = @id;
 
 -- name: FilterTags :many
 SELECT nfc_tags.uid, employees.full_name, is_active, nfc_tags.created_at

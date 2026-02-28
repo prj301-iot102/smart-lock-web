@@ -191,6 +191,7 @@ type NfcTag struct {
 	IsActive   bool               `json:"is_active"`
 	EnrolledBy uuid.UUID          `json:"enrolled_by"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Role struct {

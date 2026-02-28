@@ -80,32 +80,21 @@ func (q *Queries) FilterTags(ctx context.Context, isActive pgtype.Bool) ([]Filte
 }
 
 const getTagById = `-- name: GetTagById :one
-SELECT nfc_tags.id, uid, nfc_tags.employee_id, is_active, enrolled_by, nfc_tags.created_at, employees.id, role_id, full_name, birth, department, employees.created_at, updated_at, users.id, username, password, users.employee_id, users.created_at
-FROM nfc_tags
-JOIN employees ON employees.id = nfc_tags.employee_id
-JOIN users ON users.id = nfc_tags.enrolled_by
-WHERE nfc_tags.id = $1
+SELECT nt.id, nt.uid, nt.is_active, e.full_name, u.username, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+JOIN users u ON u.id = nt.enrolled_by
+WHERE nt.id = $1
 `
 
 type GetTagByIdRow struct {
-	ID           uuid.UUID          `json:"id"`
-	Uid          string             `json:"uid"`
-	EmployeeID   uuid.UUID          `json:"employee_id"`
-	IsActive     bool               `json:"is_active"`
-	EnrolledBy   uuid.UUID          `json:"enrolled_by"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	ID_2         uuid.UUID          `json:"id_2"`
-	RoleID       uuid.UUID          `json:"role_id"`
-	FullName     string             `json:"full_name"`
-	Birth        pgtype.Date        `json:"birth"`
-	Department   string             `json:"department"`
-	CreatedAt_2  pgtype.Timestamptz `json:"created_at_2"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-	ID_3         uuid.UUID          `json:"id_3"`
-	Username     string             `json:"username"`
-	Password     string             `json:"password"`
-	EmployeeID_2 uuid.UUID          `json:"employee_id_2"`
-	CreatedAt_3  pgtype.Timestamptz `json:"created_at_3"`
+	ID        uuid.UUID          `json:"id"`
+	Uid       string             `json:"uid"`
+	IsActive  bool               `json:"is_active"`
+	FullName  string             `json:"full_name"`
+	Username  string             `json:"username"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, error) {
@@ -114,22 +103,11 @@ func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, 
 	err := row.Scan(
 		&i.ID,
 		&i.Uid,
-		&i.EmployeeID,
 		&i.IsActive,
-		&i.EnrolledBy,
-		&i.CreatedAt,
-		&i.ID_2,
-		&i.RoleID,
 		&i.FullName,
-		&i.Birth,
-		&i.Department,
-		&i.CreatedAt_2,
-		&i.UpdatedAt,
-		&i.ID_3,
 		&i.Username,
-		&i.Password,
-		&i.EmployeeID_2,
-		&i.CreatedAt_3,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
