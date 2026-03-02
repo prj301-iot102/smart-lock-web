@@ -13,25 +13,13 @@ import (
 )
 
 const createNfcTag = `-- name: CreateNfcTag :one
-INSERT INTO nfc_tags (employee_id, uid, is_active, enrolled_by)
-VALUES($1, $2, $3, $4)
+INSERT INTO nfc_tags (uid)
+VALUES($1)
 RETURNING id
 `
 
-type CreateNfcTagParams struct {
-	EmployeeID uuid.UUID `json:"employee_id"`
-	Uid        string    `json:"uid"`
-	IsActive   bool      `json:"is_active"`
-	EnrolledBy uuid.UUID `json:"enrolled_by"`
-}
-
-func (q *Queries) CreateNfcTag(ctx context.Context, arg CreateNfcTagParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createNfcTag,
-		arg.EmployeeID,
-		arg.Uid,
-		arg.IsActive,
-		arg.EnrolledBy,
-	)
+func (q *Queries) CreateNfcTag(ctx context.Context, uid string) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createNfcTag, uid)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err

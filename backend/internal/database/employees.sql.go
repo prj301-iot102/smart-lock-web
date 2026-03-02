@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	optional "github.com/moznion/go-optional"
 )
 
 const createEmployee = `-- name: CreateEmployee :one
@@ -68,10 +69,10 @@ WHERE id = $4
 `
 
 type UpdateEmployeeParams struct {
-	FullName   pgtype.Text `json:"full_name"`
-	Birth      pgtype.Date `json:"birth"`
-	Department pgtype.Text `json:"department"`
-	ID         uuid.UUID   `json:"id"`
+	FullName   optional.Option[string] `json:"full_name"`
+	Birth      pgtype.Date             `json:"birth"`
+	Department optional.Option[string] `json:"department"`
+	ID         uuid.UUID               `json:"id"`
 }
 
 func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error {
