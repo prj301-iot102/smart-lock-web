@@ -32,6 +32,7 @@ func NewServer() (*fuego.Server, func()) {
 	)
 
 	handlers.AuthRoutes(server, db, jwt)
+	handlers.UsersRoutes(server, db)
 	handlers.NfcRoute(server, db)
 	cleanup := func() { db.Close() }
 

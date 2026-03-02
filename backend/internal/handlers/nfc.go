@@ -58,6 +58,62 @@ func (nr *NfcResource) RevokeNfc(c fuego.ContextNoBody) (bool, error) {
 	return true, nil
 }
 
+func (nr *NfcResource) EnableCreate(c fuego.ContextNoBody) (bool, error) {
+	device_id, err := uuid.Parse(c.PathParam("id"))
+	if err != nil {
+		return false, fuego.BadRequestError{}
+	}
+	ctx := context.Background()
+	queries := database.New(nr.db)
+	_, err = queries.UpdateDeviceCanCreate(ctx, database.UpdateDeviceCanCreateParams{
+		CanCreate: true,
+		ID:        device_id,
+	})
+
+	return true, nil
+}
+
+type CreateNfcRequest struct {
+	Uid      string    `json:"uid"`
+	DeviceID uuid.UUID `json:"device_id"`
+}
+
+func (nc *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (string, error) {
+	req, err := c.Body()
+	if err != nil {
+		return "", fuego.BadRequestError{
+			Err:    err,
+			Detail: "Invalid login data",
+		}
+	}
+
+	queries := database.New(nc.db)
+	ctx := context.Background()
+	can_create, err := queries.GetDeviceById(ctx, req.DeviceID)
+	if err != nil {
+		return "", fuego.BadRequestError{
+			Detail: "Device ID not found",
+		}
+	}
+
+	if !can_create.CanCreate {
+		return "", fuego.BadRequestError{
+			Detail: "This device cannot create",
+		}
+	}
+	new_nfc, err := queries.CreateNfcTag(ctx, database.CreateNfcTagParams{
+		Uid: req.Uid,
+	})
+
+	if err != nil {
+		return "", fuego.BadRequestError{
+			Detail: "",
+		}
+	}
+
+	return new_nfc.String(), nil
+}
+
 func NfcRoute(s *fuego.Server, db *pgxpool.Pool) {
 	rs := NfcResource{
 		db: db,
@@ -67,4 +123,6 @@ func NfcRoute(s *fuego.Server, db *pgxpool.Pool) {
 
 	fuego.Get(group, "/{id}", rs.GetNfc)
 	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc)
+	fuego.Patch(group, "/{device_id}/enable", rs.EnableCreate)
+	fuego.Post(group, "/create", rs.CreateNfc)
 }
