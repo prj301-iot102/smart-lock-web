@@ -1,6 +1,6 @@
 -- name: CreateNfcTag :one
-INSERT INTO nfc_tags (employee_id, uid, is_active, enrolled_by)
-VALUES(@employee_id, @uid, @is_active, @enrolled_by)
+INSERT INTO nfc_tags (uid)
+VALUES(@uid)
 RETURNING id;
 
 -- name: UpdateTagStatus :one
