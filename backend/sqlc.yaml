@@ -20,3 +20,15 @@ sql:
             go_type:
               import: "github.com/google/uuid"
               type: "UUID"
+          - db_type: "text"
+            nullable: true
+            go_type:
+              import: "github.com/moznion/go-optional"
+              package: "optional"
+              type: "Option[string]"
+          - db_type: "bool"
+            nullable: true
+            go_type:
+              import: "github.com/moznion/go-optional"
+              package: "optional"
+              type: "Option[bool]"
