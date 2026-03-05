@@ -29,6 +29,24 @@ func (q *Queries) GetDeviceById(ctx context.Context, id uuid.UUID) (Device, erro
 	return i, err
 }
 
+const getDeviceByMac = `-- name: GetDeviceByMac :one
+SELECT id, device_name, mac_address, can_create, created_at FROM devices
+WHERE mac_address = $1
+`
+
+func (q *Queries) GetDeviceByMac(ctx context.Context, macAddress string) (Device, error) {
+	row := q.db.QueryRow(ctx, getDeviceByMac, macAddress)
+	var i Device
+	err := row.Scan(
+		&i.ID,
+		&i.DeviceName,
+		&i.MacAddress,
+		&i.CanCreate,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const updateDeviceCanCreate = `-- name: UpdateDeviceCanCreate :one
 UPDATE devices
 SET
