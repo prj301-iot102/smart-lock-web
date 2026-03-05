@@ -13,25 +13,13 @@ import (
 )
 
 const createNfcTag = `-- name: CreateNfcTag :one
-INSERT INTO nfc_tags (employee_id, uid, is_active, enrolled_by)
-VALUES($1, $2, $3, $4)
+INSERT INTO nfc_tags (uid)
+VALUES($1)
 RETURNING id
 `
 
-type CreateNfcTagParams struct {
-	EmployeeID uuid.UUID `json:"employee_id"`
-	Uid        string    `json:"uid"`
-	IsActive   bool      `json:"is_active"`
-	EnrolledBy uuid.UUID `json:"enrolled_by"`
-}
-
-func (q *Queries) CreateNfcTag(ctx context.Context, arg CreateNfcTagParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createNfcTag,
-		arg.EmployeeID,
-		arg.Uid,
-		arg.IsActive,
-		arg.EnrolledBy,
-	)
+func (q *Queries) CreateNfcTag(ctx context.Context, uid string) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createNfcTag, uid)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -80,32 +68,22 @@ func (q *Queries) FilterTags(ctx context.Context, isActive pgtype.Bool) ([]Filte
 }
 
 const getTagById = `-- name: GetTagById :one
-SELECT nfc_tags.id, uid, nfc_tags.employee_id, is_active, enrolled_by, nfc_tags.created_at, employees.id, role_id, full_name, birth, department, employees.created_at, updated_at, users.id, username, password, users.employee_id, users.created_at
-FROM nfc_tags
-JOIN employees ON employees.id = nfc_tags.employee_id
-JOIN users ON users.id = nfc_tags.enrolled_by
-WHERE nfc_tags.id = $1
+SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, u.username, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+JOIN users u ON u.id = nt.enrolled_by
+WHERE nt.id = $1
 `
 
 type GetTagByIdRow struct {
-	ID           uuid.UUID          `json:"id"`
-	Uid          string             `json:"uid"`
-	EmployeeID   uuid.UUID          `json:"employee_id"`
-	IsActive     bool               `json:"is_active"`
-	EnrolledBy   uuid.UUID          `json:"enrolled_by"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	ID_2         uuid.UUID          `json:"id_2"`
-	RoleID       uuid.UUID          `json:"role_id"`
-	FullName     string             `json:"full_name"`
-	Birth        pgtype.Date        `json:"birth"`
-	Department   string             `json:"department"`
-	CreatedAt_2  pgtype.Timestamptz `json:"created_at_2"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-	ID_3         uuid.UUID          `json:"id_3"`
-	Username     string             `json:"username"`
-	Password     string             `json:"password"`
-	EmployeeID_2 uuid.UUID          `json:"employee_id_2"`
-	CreatedAt_3  pgtype.Timestamptz `json:"created_at_3"`
+	ID         uuid.UUID          `json:"id"`
+	Uid        string             `json:"uid"`
+	IsActive   bool               `json:"is_active"`
+	EmployeeID uuid.UUID          `json:"employee_id"`
+	FullName   string             `json:"full_name"`
+	Username   string             `json:"username"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
 
 func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, error) {
@@ -114,39 +92,68 @@ func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, 
 	err := row.Scan(
 		&i.ID,
 		&i.Uid,
-		&i.EmployeeID,
 		&i.IsActive,
-		&i.EnrolledBy,
-		&i.CreatedAt,
-		&i.ID_2,
-		&i.RoleID,
+		&i.EmployeeID,
 		&i.FullName,
-		&i.Birth,
-		&i.Department,
-		&i.CreatedAt_2,
-		&i.UpdatedAt,
-		&i.ID_3,
 		&i.Username,
-		&i.Password,
-		&i.EmployeeID_2,
-		&i.CreatedAt_3,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const updateTagStatus = `-- name: UpdateTagStatus :exec
+const getTagByUid = `-- name: GetTagByUid :one
+SELECT nt.id, nt.uid, e.full_name, nt.employee_id, r.role_name, u.username, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+JOIN users u ON u.id = nt.enrolled_by
+JOIN roles r ON r.id = e.role_id
+WHERE nt.uid = $1
+`
+
+type GetTagByUidRow struct {
+	ID         uuid.UUID          `json:"id"`
+	Uid        string             `json:"uid"`
+	FullName   string             `json:"full_name"`
+	EmployeeID uuid.UUID          `json:"employee_id"`
+	RoleName   string             `json:"role_name"`
+	Username   string             `json:"username"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetTagByUid(ctx context.Context, uid string) (GetTagByUidRow, error) {
+	row := q.db.QueryRow(ctx, getTagByUid, uid)
+	var i GetTagByUidRow
+	err := row.Scan(
+		&i.ID,
+		&i.Uid,
+		&i.FullName,
+		&i.EmployeeID,
+		&i.RoleName,
+		&i.Username,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateTagStatus = `-- name: UpdateTagStatus :one
 UPDATE nfc_tags
 SET
-    is_active = COALESCE($1, is_active)
-WHERE id = $2
+    is_active = $1
+WHERE id = $2 AND is_active = true
+RETURNING id
 `
 
 type UpdateTagStatusParams struct {
-	IsActive pgtype.Bool `json:"is_active"`
-	ID       uuid.UUID   `json:"id"`
+	IsActive bool      `json:"is_active"`
+	ID       uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateTagStatus(ctx context.Context, arg UpdateTagStatusParams) error {
-	_, err := q.db.Exec(ctx, updateTagStatus, arg.IsActive, arg.ID)
-	return err
+func (q *Queries) UpdateTagStatus(ctx context.Context, arg UpdateTagStatusParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, updateTagStatus, arg.IsActive, arg.ID)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }

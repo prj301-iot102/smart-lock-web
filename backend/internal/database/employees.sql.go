@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	optional "github.com/moznion/go-optional"
 )
 
 const createEmployee = `-- name: CreateEmployee :one
@@ -31,14 +32,17 @@ func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) 
 }
 
 const getEmployeeById = `-- name: GetEmployeeById :one
-SELECT full_name, birth, department, created_at, updated_at
-FROM employees
-WHERE id = $1
+SELECT e.id, e.full_name, e.birth, r.role_name, e.department, e.created_at, e.updated_at
+FROM employees e
+JOIN roles r ON r.id = e.role_id
+WHERE e.id = $1
 `
 
 type GetEmployeeByIdRow struct {
+	ID         uuid.UUID          `json:"id"`
 	FullName   string             `json:"full_name"`
 	Birth      pgtype.Date        `json:"birth"`
+	RoleName   string             `json:"role_name"`
 	Department string             `json:"department"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
@@ -48,8 +52,10 @@ func (q *Queries) GetEmployeeById(ctx context.Context, id uuid.UUID) (GetEmploye
 	row := q.db.QueryRow(ctx, getEmployeeById, id)
 	var i GetEmployeeByIdRow
 	err := row.Scan(
+		&i.ID,
 		&i.FullName,
 		&i.Birth,
+		&i.RoleName,
 		&i.Department,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -68,10 +74,10 @@ WHERE id = $4
 `
 
 type UpdateEmployeeParams struct {
-	FullName   pgtype.Text `json:"full_name"`
-	Birth      pgtype.Date `json:"birth"`
-	Department pgtype.Text `json:"department"`
-	ID         uuid.UUID   `json:"id"`
+	FullName   optional.Option[string] `json:"full_name"`
+	Birth      pgtype.Date             `json:"birth"`
+	Department optional.Option[string] `json:"department"`
+	ID         uuid.UUID               `json:"id"`
 }
 
 func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error {
