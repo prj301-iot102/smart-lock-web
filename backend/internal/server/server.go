@@ -21,7 +21,7 @@ func NewServer() (*fuego.Server, func()) {
 	serverCfg, _ := env.ParseAs[config.Server]()
 
 	server := fuego.NewServer(
-		fuego.WithAddr(fmt.Sprintf(":%d", serverCfg.Port)),
+		fuego.WithAddr(fmt.Sprintf("localhost:%d", serverCfg.Port)),
 		// fuego.WithGlobalMiddlewares(middleware.Cors),
 		fuego.WithEngineOptions(
 			fuego.WithOpenAPIConfig(fuego.OpenAPIConfig{
@@ -32,6 +32,7 @@ func NewServer() (*fuego.Server, func()) {
 	)
 
 	handlers.AuthRoutes(server, db, jwt)
+	handlers.EmployeeRoutes(server, db)
 	cleanup := func() { db.Close() }
 
 	return server, cleanup

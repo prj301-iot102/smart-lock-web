@@ -23,20 +23,37 @@ type CreateEmployeeParams struct {
 	Department string `json:"department"`
 }
 
-func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (uuid.UUID, error) {
+type CreateEmployeeRow struct {
+	ID         uuid.UUID          `json:"id"`
+	FullName   string             `json:"full_name"`
+	Birth      pgtype.Date        `json:"birth"`
+	Department string             `json:"department"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (CreateEmployeeRow, error) {
 	row := q.db.QueryRow(ctx, createEmployee, arg.FullName, arg.Department)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i CreateEmployeeRow
+	err := row.Scan(
+		&i.ID,
+		&i.FullName,
+		&i.Birth,
+		&i.Department,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getEmployeeById = `-- name: GetEmployeeById :one
-SELECT full_name, birth, department, created_at, updated_at
+SELECT id, full_name, birth, department, created_at, updated_at
 FROM employees
 WHERE id = $1
 `
 
 type GetEmployeeByIdRow struct {
+	ID         uuid.UUID          `json:"id"`
 	FullName   string             `json:"full_name"`
 	Birth      pgtype.Date        `json:"birth"`
 	Department string             `json:"department"`
@@ -48,6 +65,7 @@ func (q *Queries) GetEmployeeById(ctx context.Context, id uuid.UUID) (GetEmploye
 	row := q.db.QueryRow(ctx, getEmployeeById, id)
 	var i GetEmployeeByIdRow
 	err := row.Scan(
+		&i.ID,
 		&i.FullName,
 		&i.Birth,
 		&i.Department,
@@ -60,8 +78,8 @@ func (q *Queries) GetEmployeeById(ctx context.Context, id uuid.UUID) (GetEmploye
 const updateEmployee = `-- name: UpdateEmployee :exec
 UPDATE employees
 SET
-	full_name = COALESCE($1, full_name),
-	birth = COALESCE($2, birth),
+	full_name  = COALESCE($1, full_name),
+	birth      = COALESCE($2, birth),
 	department = COALESCE($3, department),
 	updated_at = now()
 WHERE id = $4
@@ -81,5 +99,83 @@ func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) 
 		arg.Department,
 		arg.ID,
 	)
+	return err
+}
+
+const listEmployees = `-- name: ListEmployees :many
+SELECT id, full_name, birth, department, created_at, updated_at
+FROM employees
+WHERE
+    ($1::text IS NULL OR full_name ILIKE '%' || $1 || '%')
+    AND ($2::text IS NULL OR department = $2)
+    AND ($3::date IS NULL OR birth >= $3)
+    AND ($4::date IS NULL OR birth <= $4)
+    AND ($5::date IS NULL OR created_at::date >= $5)
+    AND ($6::date IS NULL OR created_at::date <= $6)
+ORDER BY created_at DESC
+LIMIT $7 OFFSET $8
+`
+
+type ListEmployeesParams struct {
+	Search      pgtype.Text `json:"search"`
+	Department  pgtype.Text `json:"department"`
+	BirthFrom   pgtype.Date `json:"birth_from"`
+	BirthTo     pgtype.Date `json:"birth_to"`
+	CreatedFrom pgtype.Date `json:"created_from"`
+	CreatedTo   pgtype.Date `json:"created_to"`
+	Limit       int32       `json:"limit"`
+	Offset      int32       `json:"offset"`
+}
+
+type ListEmployeesRow struct {
+	ID         uuid.UUID          `json:"id"`
+	FullName   string             `json:"full_name"`
+	Birth      pgtype.Date        `json:"birth"`
+	Department string             `json:"department"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) ListEmployees(ctx context.Context, arg ListEmployeesParams) ([]ListEmployeesRow, error) {
+	rows, err := q.db.Query(ctx, listEmployees,
+		arg.Search,
+		arg.Department,
+		arg.BirthFrom,
+		arg.BirthTo,
+		arg.CreatedFrom,
+		arg.CreatedTo,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []ListEmployeesRow
+	for rows.Next() {
+		var i ListEmployeesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FullName,
+			&i.Birth,
+			&i.Department,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	return items, rows.Err()
+}
+
+const deleteEmployee = `-- name: DeleteEmployee :exec
+DELETE FROM employees
+WHERE id = $1
+`
+
+func (q *Queries) DeleteEmployee(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteEmployee, id)
 	return err
 }
