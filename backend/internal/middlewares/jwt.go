@@ -9,10 +9,12 @@ import (
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/services"
 )
 
+type key string
+
 const (
 	authrizaion           string = "Authorization"
 	bearer                string = "Bearer "
-	AuthorizationTokenKey string = "token"
+	AuthorizationTokenKey key    = "token"
 )
 
 func RequireAuthentication(next http.Handler) http.Handler {

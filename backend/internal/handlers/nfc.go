@@ -140,6 +140,11 @@ func (nr *NfcResource) EnableCreate(c fuego.ContextNoBody) (bool, error) {
 		CanCreate: true,
 		ID:        device_id,
 	})
+	if err != nil {
+		return false, fuego.BadRequestError{
+			Detail: "Invaid body",
+		}
+	}
 
 	return true, nil
 }
