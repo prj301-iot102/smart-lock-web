@@ -12,93 +12,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Action string
-
-const (
-	ActionEnroll Action = "enroll"
-	ActionUpdate Action = "update"
-	ActionRevoke Action = "revoke"
-	ActionDelete Action = "delete"
-)
-
-func (e *Action) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = Action(s)
-	case string:
-		*e = Action(s)
-	default:
-		return fmt.Errorf("unsupported scan type for Action: %T", src)
-	}
-	return nil
-}
-
-type NullAction struct {
-	Action Action `json:"action"`
-	Valid  bool   `json:"valid"` // Valid is true if Action is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullAction) Scan(value interface{}) error {
-	if value == nil {
-		ns.Action, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.Action.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullAction) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.Action), nil
-}
-
-type Result string
-
-const (
-	ResultAccepted Result = "accepted"
-	ResultRejected Result = "rejected"
-	ResultExisted  Result = "existed"
-)
-
-func (e *Result) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = Result(s)
-	case string:
-		*e = Result(s)
-	default:
-		return fmt.Errorf("unsupported scan type for Result: %T", src)
-	}
-	return nil
-}
-
-type NullResult struct {
-	Result Result `json:"result"`
-	Valid  bool   `json:"valid"` // Valid is true if Result is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullResult) Scan(value interface{}) error {
-	if value == nil {
-		ns.Result, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.Result.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullResult) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.Result), nil
-}
-
 type Status string
 
 const (
@@ -150,9 +63,18 @@ type AccessLog struct {
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
+type Device struct {
+	ID         uuid.UUID          `json:"id"`
+	DeviceName string             `json:"device_name"`
+	MacAddress string             `json:"mac_address"`
+	CanCreate  bool               `json:"can_create"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
 type Door struct {
 	ID        uuid.UUID          `json:"id"`
 	DoorName  string             `json:"door_name"`
+	DeviceID  uuid.UUID          `json:"device_id"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
@@ -174,23 +96,13 @@ type Employee struct {
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
 
-type EnrollmentLog struct {
-	ID         uuid.UUID          `json:"id"`
-	EmployeeID uuid.UUID          `json:"employee_id"`
-	NfcTagUid  string             `json:"nfc_tag_uid"`
-	Action     Status             `json:"action"`
-	Result     Result             `json:"result"`
-	AdminID    uuid.UUID          `json:"admin_id"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-}
-
 type NfcTag struct {
 	ID         uuid.UUID          `json:"id"`
 	Uid        string             `json:"uid"`
 	EmployeeID uuid.UUID          `json:"employee_id"`
 	IsActive   bool               `json:"is_active"`
-	EnrolledBy uuid.UUID          `json:"enrolled_by"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Role struct {

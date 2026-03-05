@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -29,6 +30,35 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UU
 	return id, err
 }
 
+const getAccountById = `-- name: GetAccountById :one
+SELECT u.id, u.username, u.created_at, e.full_name, r.role_name
+FROM users u
+JOIN employees e ON e.id = u.employee_id
+JOIN roles r ON r.id = e.role_id
+WHERE u.id = $1
+`
+
+type GetAccountByIdRow struct {
+	ID        uuid.UUID          `json:"id"`
+	Username  string             `json:"username"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	FullName  string             `json:"full_name"`
+	RoleName  string             `json:"role_name"`
+}
+
+func (q *Queries) GetAccountById(ctx context.Context, id uuid.UUID) (GetAccountByIdRow, error) {
+	row := q.db.QueryRow(ctx, getAccountById, id)
+	var i GetAccountByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.CreatedAt,
+		&i.FullName,
+		&i.RoleName,
+	)
+	return i, err
+}
+
 const getAccountByUsername = `-- name: GetAccountByUsername :one
 SELECT id, password
 FROM users u
@@ -45,4 +75,21 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ge
 	var i GetAccountByUsernameRow
 	err := row.Scan(&i.ID, &i.Password)
 	return i, err
+}
+
+const updatePassword = `-- name: UpdatePassword :exec
+UPDATE users
+SET
+    password = $1
+WHERE id = $2
+`
+
+type UpdatePasswordParams struct {
+	Password string    `json:"password"`
+	ID       uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error {
+	_, err := q.db.Exec(ctx, updatePassword, arg.Password, arg.ID)
+	return err
 }
