@@ -6,7 +6,7 @@ CREATE TABLE roles (
     role_name text NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now(),
 
-	UNIQUE (role_name)
+    UNIQUE (role_name)
 );
 
 -- +goose Down

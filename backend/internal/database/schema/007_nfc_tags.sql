@@ -1,6 +1,5 @@
 -- +goose Up
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;
 
 CREATE TABLE nfc_tags (
     id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
