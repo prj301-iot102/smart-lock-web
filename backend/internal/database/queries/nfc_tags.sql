@@ -17,6 +17,14 @@ JOIN employees e ON e.id = nt.employee_id
 JOIN users u ON u.id = nt.enrolled_by
 WHERE nt.id = @id;
 
+-- name: GetTagByUid :one
+SELECT nt.id, nt.uid, e.full_name, nt.employee_id, r.role_name, u.username, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+JOIN users u ON u.id = nt.enrolled_by
+JOIN roles r ON r.id = e.role_id
+WHERE nt.uid = @uid;
+
 -- name: FilterTags :many
 SELECT nfc_tags.uid, employees.full_name, is_active, nfc_tags.created_at
 FROM nfc_tags
