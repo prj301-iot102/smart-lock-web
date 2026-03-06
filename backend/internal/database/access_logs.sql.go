@@ -13,18 +13,19 @@ import (
 )
 
 const createAccessLog = `-- name: CreateAccessLog :one
-INSERT INTO access_logs (employee_id, status)
-VALUES($1, $2)
+INSERT INTO access_logs (employee_id, door_id, status)
+VALUES($1, $2, $3)
 RETURNING id
 `
 
 type CreateAccessLogParams struct {
 	EmployeeID uuid.UUID `json:"employee_id"`
+	DoorID     uuid.UUID `json:"door_id"`
 	Status     Status    `json:"status"`
 }
 
 func (q *Queries) CreateAccessLog(ctx context.Context, arg CreateAccessLogParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createAccessLog, arg.EmployeeID, arg.Status)
+	row := q.db.QueryRow(ctx, createAccessLog, arg.EmployeeID, arg.DoorID, arg.Status)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -35,6 +36,7 @@ SELECT al.id, e.full_name, nt.uid, al.status, al.created_at
 FROM access_logs al
 JOIN employees e ON e.id = al.employee_id
 JOIN nfc_tags nt ON nt.id = al.nfc_tag_id
+JOIN doors d ON d.id = al.door_id
 ORDER BY al.created_at DESC
 `
 
