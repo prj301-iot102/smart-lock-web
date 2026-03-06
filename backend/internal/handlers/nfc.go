@@ -55,10 +55,6 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 
 	device, err := queries.GetDeviceByMac(ctx, req.DeviceMac)
 	if err != nil {
-		queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
-			EmployeeID: uuid.Nil,
-			Status:     database.StatusDenied,
-		})
 		return false, fuego.NotFoundError{
 			Detail: "Device not found",
 		}
@@ -95,6 +91,7 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 	if employee.RoleName != door_permisson.RoleName {
 		queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
 			EmployeeID: employee.ID,
+			DoorID:     door.ID,
 			Status:     database.StatusDenied,
 		})
 		return false, fuego.BadRequestError{}
@@ -102,6 +99,7 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 
 	queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
 		EmployeeID: employee.ID,
+		DoorID:     door.ID,
 		Status:     database.StatusGranted,
 	})
 
