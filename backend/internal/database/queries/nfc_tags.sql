@@ -18,10 +18,9 @@ JOIN users u ON u.id = nt.enrolled_by
 WHERE nt.id = @id;
 
 -- name: GetTagByUid :one
-SELECT nt.id, nt.uid, e.full_name, nt.employee_id, r.role_name, u.username, nt.created_at, nt.updated_at
+SELECT nt.id, nt.uid, e.full_name, nt.employee_id, r.role_name, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-JOIN users u ON u.id = nt.enrolled_by
 JOIN roles r ON r.id = e.role_id
 WHERE nt.uid = @uid;
 
