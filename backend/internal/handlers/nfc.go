@@ -4,10 +4,12 @@ import (
 	"context"
 
 	"github.com/go-fuego/fuego"
+	"github.com/go-fuego/fuego/option"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/middlewares"
 )
 
 type NfcResource struct {
@@ -200,9 +202,9 @@ func NfcRoute(s *fuego.Server, db *pgxpool.Pool) {
 
 	group := fuego.Group(s, "/api/nfc")
 
-	fuego.Get(group, "/{id}", rs.GetNfc)
+	fuego.Get(group, "/{id}", rs.GetNfc, option.Middleware(middlewares.RequireAuthentication))
 	fuego.Post(group, "/validate", rs.ValidateNfc)
-	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc)
-	fuego.Patch(group, "/{device_id}/enable", rs.EnableCreate)
+	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc, option.Middleware(middlewares.RequireAuthentication))
+	fuego.Patch(group, "/{device_id}/enable", rs.EnableCreate, option.Middleware(middlewares.RequireAuthentication))
 	fuego.Post(group, "/create", rs.CreateNfc)
 }

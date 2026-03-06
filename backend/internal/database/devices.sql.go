@@ -47,6 +47,37 @@ func (q *Queries) GetDeviceByMac(ctx context.Context, macAddress string) (Device
 	return i, err
 }
 
+const listDevices = `-- name: ListDevices :many
+SELECT id, device_name, mac_address, can_create, created_at FROM devices
+ORDER BY device_name
+`
+
+func (q *Queries) ListDevices(ctx context.Context) ([]Device, error) {
+	rows, err := q.db.Query(ctx, listDevices)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Device
+	for rows.Next() {
+		var i Device
+		if err := rows.Scan(
+			&i.ID,
+			&i.DeviceName,
+			&i.MacAddress,
+			&i.CanCreate,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateDeviceCanCreate = `-- name: UpdateDeviceCanCreate :one
 UPDATE devices
 SET

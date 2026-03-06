@@ -26,6 +26,7 @@ func RequireAuthentication(next http.Handler) http.Handler {
 			fuego.SendJSONError(w, nil, fuego.BadRequestError{
 				Title: "Missing authorization header",
 			})
+			return
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, bearer)

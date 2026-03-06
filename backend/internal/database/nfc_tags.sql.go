@@ -103,10 +103,9 @@ func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, 
 }
 
 const getTagByUid = `-- name: GetTagByUid :one
-SELECT nt.id, nt.uid, e.full_name, nt.employee_id, r.role_name, u.username, nt.created_at, nt.updated_at
+SELECT nt.id, nt.uid, e.full_name, nt.employee_id, r.role_name, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-JOIN users u ON u.id = nt.enrolled_by
 JOIN roles r ON r.id = e.role_id
 WHERE nt.uid = $1
 `
@@ -117,7 +116,6 @@ type GetTagByUidRow struct {
 	FullName   string             `json:"full_name"`
 	EmployeeID uuid.UUID          `json:"employee_id"`
 	RoleName   string             `json:"role_name"`
-	Username   string             `json:"username"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
@@ -131,7 +129,6 @@ func (q *Queries) GetTagByUid(ctx context.Context, uid string) (GetTagByUidRow, 
 		&i.FullName,
 		&i.EmployeeID,
 		&i.RoleName,
-		&i.Username,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
