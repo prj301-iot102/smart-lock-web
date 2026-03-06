@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
+	"github.com/go-fuego/fuego/param"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -200,9 +201,16 @@ func NfcRoute(s *fuego.Server, db *pgxpool.Pool) {
 
 	group := fuego.Group(s, "/api/nfc")
 
-	fuego.Get(group, "/{id}", rs.GetNfc, option.Middleware(middlewares.RequireAuthentication))
+	fuego.Get(group, "/{id}", rs.GetNfc,
+		option.Middleware(middlewares.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Post(group, "/validate", rs.ValidateNfc)
-	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc, option.Middleware(middlewares.RequireAuthentication))
-	fuego.Patch(group, "/{device_id}/enable", rs.EnableCreate, option.Middleware(middlewares.RequireAuthentication))
+	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc,
+		option.Middleware(middlewares.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
+	fuego.Patch(group, "/{device_id}/enable", rs.EnableCreate,
+		option.Middleware(middlewares.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
+
 	fuego.Post(group, "/create", rs.CreateNfc)
 }
