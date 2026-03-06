@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/go-fuego/fuego"
+	"github.com/go-fuego/fuego/option"
+	"github.com/go-fuego/fuego/param"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/middlewares"
 )
 
 type DeviceResource struct {
@@ -96,8 +99,14 @@ func DeviceRoute(s *fuego.Server, db *pgxpool.Pool) {
 	}
 
 	group := fuego.Group(s, "/api/devices")
-	fuego.Get(group, "/", rs.ListDevices)
+	fuego.Get(group, "/", rs.ListDevices,
+		option.Middleware(middlewares.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Post(group, "/flag", rs.GetDeviceFlag)
-	fuego.Get(group, "/{id}", rs.GetDevice)
-	fuego.Patch(group, "/{id}/enable", rs.EnableCreate)
+	fuego.Get(group, "/{id}", rs.GetDevice,
+		option.Middleware(middlewares.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
+	fuego.Patch(group, "/{id}/enable", rs.EnableCreate,
+		option.Middleware(middlewares.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
 }

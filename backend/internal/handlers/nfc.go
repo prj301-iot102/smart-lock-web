@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
+	"github.com/go-fuego/fuego/param"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -55,10 +56,6 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 
 	device, err := queries.GetDeviceByMac(ctx, req.DeviceMac)
 	if err != nil {
-		queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
-			EmployeeID: uuid.Nil,
-			Status:     database.StatusDenied,
-		})
 		return false, fuego.NotFoundError{
 			Detail: "Device not found",
 		}
@@ -95,6 +92,7 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 	if employee.RoleName != door_permisson.RoleName {
 		queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
 			EmployeeID: employee.ID,
+			DoorID:     door.ID,
 			Status:     database.StatusDenied,
 		})
 		return false, fuego.BadRequestError{}
@@ -102,6 +100,7 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 
 	queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
 		EmployeeID: employee.ID,
+		DoorID:     door.ID,
 		Status:     database.StatusGranted,
 	})
 
@@ -202,9 +201,16 @@ func NfcRoute(s *fuego.Server, db *pgxpool.Pool) {
 
 	group := fuego.Group(s, "/api/nfc")
 
-	fuego.Get(group, "/{id}", rs.GetNfc, option.Middleware(middlewares.RequireAuthentication))
+	fuego.Get(group, "/{id}", rs.GetNfc,
+		option.Middleware(middlewares.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Post(group, "/validate", rs.ValidateNfc)
-	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc, option.Middleware(middlewares.RequireAuthentication))
-	fuego.Patch(group, "/{device_id}/enable", rs.EnableCreate, option.Middleware(middlewares.RequireAuthentication))
+	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc,
+		option.Middleware(middlewares.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
+	fuego.Patch(group, "/{device_id}/enable", rs.EnableCreate,
+		option.Middleware(middlewares.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
+
 	fuego.Post(group, "/create", rs.CreateNfc)
 }
