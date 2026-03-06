@@ -10,18 +10,30 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	optional "github.com/moznion/go-optional"
+	//"github.com/moznion/go-optional"
 )
 
+const getRoleIdByName = `-- name: GetRoleIdByName :one
+SELECT id FROM roles WHERE role_name = $1
+`
+
+func (q *Queries) GetRoleIdByName(ctx context.Context, roleName string) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getRoleIdByName, roleName)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createEmployee = `-- name: CreateEmployee :one
-INSERT INTO employees (full_name, department)
-VALUES($1, $2)
-RETURNING id
+INSERT INTO employees (role_id, full_name, department)
+VALUES($1, $2, $3)
+RETURNING id, full_name, birth, department, created_at, updated_at
 `
 
 type CreateEmployeeParams struct {
-	FullName   string `json:"full_name"`
-	Department string `json:"department"`
+	RoleID     uuid.UUID `json:"role_id"`
+	FullName   string    `json:"full_name"`
+	Department string    `json:"department"`
 }
 
 type CreateEmployeeRow struct {
@@ -34,7 +46,7 @@ type CreateEmployeeRow struct {
 }
 
 func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (CreateEmployeeRow, error) {
-	row := q.db.QueryRow(ctx, createEmployee, arg.FullName, arg.Department)
+	row := q.db.QueryRow(ctx, createEmployee, arg.RoleID, arg.FullName, arg.Department)
 	var i CreateEmployeeRow
 	err := row.Scan(
 		&i.ID,
@@ -46,7 +58,6 @@ func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) 
 	)
 	return i, err
 }
-
 const getEmployeeById = `-- name: GetEmployeeById :one
 SELECT e.id, e.full_name, e.birth, r.role_name, e.department, e.created_at, e.updated_at
 FROM employees e
@@ -82,22 +93,25 @@ func (q *Queries) GetEmployeeById(ctx context.Context, id uuid.UUID) (GetEmploye
 const updateEmployee = `-- name: UpdateEmployee :exec
 UPDATE employees
 SET
-	full_name  = COALESCE($1, full_name),
-	birth      = COALESCE($2, birth),
-	department = COALESCE($3, department),
+	role_id    = COALESCE((SELECT id FROM roles WHERE role_name = $1), role_id),
+	full_name  = COALESCE($2, full_name),
+	birth      = COALESCE($3, birth),
+	department = COALESCE($4, department),
 	updated_at = now()
-WHERE id = $4
+WHERE id = $5
 `
 
 type UpdateEmployeeParams struct {
-	FullName   optional.Option[string] `json:"full_name"`
-	Birth      pgtype.Date             `json:"birth"`
-	Department optional.Option[string] `json:"department"`
-	ID         uuid.UUID               `json:"id"`
+	RoleName   *string     `json:"role_name"`
+	FullName   *string     `json:"full_name"`
+	Birth      pgtype.Date `json:"birth"`
+	Department *string     `json:"department"`
+	ID         uuid.UUID   `json:"id"`
 }
 
 func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error {
 	_, err := q.db.Exec(ctx, updateEmployee,
+		arg.RoleName,
 		arg.FullName,
 		arg.Birth,
 		arg.Department,

@@ -18,6 +18,7 @@ SET
 	updated_at = now()
 WHERE id = @id;
 
+-- name: ListEmployees :many
 SELECT id, full_name, birth, department, created_at, updated_at
 FROM employees
 WHERE
@@ -30,6 +31,7 @@ WHERE
 ORDER BY created_at DESC
 LIMIT $7 OFFSET $8;
 
+-- name: DeleteEmployee :exec
 DELETE FROM employees
 WHERE id = $1;
 
