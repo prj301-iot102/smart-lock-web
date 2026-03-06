@@ -123,17 +123,6 @@ func getByIdToResponse(r database.GetEmployeeByIdRow) EmployeeResponse {
 	}
 }
 
-func createToResponse(r database.CreateEmployeeRow) EmployeeResponse {
-	return EmployeeResponse{
-		ID:         r.ID,
-		FullName:   r.FullName,
-		Birth:      r.Birth,
-		Department: r.Department,
-		CreatedAt:  r.CreatedAt,
-		UpdatedAt:  r.UpdatedAt,
-	}
-}
-
 func buildPage(rows []database.ListEmployeesRow, page, limit int) EmployeeListResponse {
 	data := make([]EmployeeResponse, 0, len(rows))
 	for _, r := range rows {
