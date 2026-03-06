@@ -58,6 +58,6 @@ jobs:
       # - name: Clean containers, image
       #   run: docker compose -f backend/compose.yml -p smart-lock-backend down --rmi all -v
       - name: Remove old iamge
-        run: image prune -a -f
+        run: docker image prune -a -f
       - name: Deploy
         run: docker compose -f backend/compose.yml -p smart-lock-backend up -d
