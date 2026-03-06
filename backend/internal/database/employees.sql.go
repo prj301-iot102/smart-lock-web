@@ -58,6 +58,7 @@ func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) 
 	)
 	return i, err
 }
+
 const getEmployeeById = `-- name: GetEmployeeById :one
 SELECT e.id, e.full_name, e.birth, r.role_name, e.department, e.created_at, e.updated_at
 FROM employees e
