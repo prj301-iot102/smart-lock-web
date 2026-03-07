@@ -29,7 +29,7 @@ func (m *AuthMiddleware) RequireAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get(authrizaion)
 		if authHeader == "" {
-			fuego.SendJSONError(w, nil, fuego.BadRequestError{
+			fuego.SendJSONError(w, nil, fuego.UnauthorizedError{
 				Title: "Missing authorization header",
 			})
 			return
@@ -38,7 +38,7 @@ func (m *AuthMiddleware) RequireAuthentication(next http.Handler) http.Handler {
 		tokenString := strings.TrimPrefix(authHeader, bearer)
 		token, err := m.jwtService.ValidateJWT(tokenString)
 		if err != nil {
-			fuego.SendJSONError(w, nil, fuego.BadRequestError{
+			fuego.SendJSONError(w, nil, fuego.UnauthorizedError{
 				Title: "Invalid authorization token",
 			})
 			return
