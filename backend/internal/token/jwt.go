@@ -1,4 +1,4 @@
-package services
+package token
 
 import (
 	"crypto/rand"
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/caarlos0/env/v11"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 
@@ -24,9 +23,7 @@ type JwtAuth struct {
 	cfg config.Jwt
 }
 
-func NewJwtAuth() *JwtAuth {
-	cfg, _ := env.ParseAs[config.Jwt]()
-
+func NewJwtAuth(cfg config.Jwt) *JwtAuth {
 	return &JwtAuth{cfg}
 }
 
