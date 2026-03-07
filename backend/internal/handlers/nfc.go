@@ -11,10 +11,12 @@ import (
 
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/middlewares"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/token"
 )
 
 type NfcResource struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	jwt *token.JwtAuth
 }
 
 func (nr *NfcResource) GetNfc(c fuego.ContextNoBody) (database.GetTagByIdRow, error) {
@@ -194,22 +196,25 @@ func (nc *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (str
 	return new_nfc.String(), nil
 }
 
-func NfcRoute(s *fuego.Server, db *pgxpool.Pool) {
+func NfcRoute(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	rs := NfcResource{
-		db: db,
+		db:  db,
+		jwt: jwt,
 	}
+
+	authMiddleware := middlewares.NewAuthMiddleware(jwt)
 
 	group := fuego.Group(s, "/api/nfc")
 
 	fuego.Get(group, "/{id}", rs.GetNfc,
-		option.Middleware(middlewares.RequireAuthentication),
+		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Post(group, "/validate", rs.ValidateNfc)
 	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc,
-		option.Middleware(middlewares.RequireAuthentication),
+		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Patch(group, "/{device_id}/enable", rs.EnableCreate,
-		option.Middleware(middlewares.RequireAuthentication),
+		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 
 	fuego.Post(group, "/create", rs.CreateNfc)
