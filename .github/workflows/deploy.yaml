@@ -45,7 +45,7 @@ jobs:
       DB_PORT: ${{ secrets.DB_PORT }}
 
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_EXPIRES_IN: ${ secrets.JWT_EXPIRES_IN }}
+      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
