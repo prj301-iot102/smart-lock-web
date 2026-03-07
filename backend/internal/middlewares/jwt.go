@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-fuego/fuego"
-	"github.com/prj301-iot102/smart-lock-web/backend/internal/services"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/token"
 )
 
 type key string
@@ -17,9 +17,15 @@ const (
 	AuthorizationTokenKey key    = "token"
 )
 
-func RequireAuthentication(next http.Handler) http.Handler {
-	jwtService := services.NewJwtAuth()
+type AuthMiddleware struct {
+	jwtService *token.JwtAuth
+}
 
+func NewAuthMiddleware(jwtService *token.JwtAuth) *AuthMiddleware {
+	return &AuthMiddleware{jwtService: jwtService}
+}
+
+func (m *AuthMiddleware) RequireAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get(authrizaion)
 		if authHeader == "" {
@@ -30,8 +36,7 @@ func RequireAuthentication(next http.Handler) http.Handler {
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, bearer)
-
-		token, err := jwtService.ValidateJWT(tokenString)
+		token, err := m.jwtService.ValidateJWT(tokenString)
 		if err != nil {
 			fuego.SendJSONError(w, nil, fuego.BadRequestError{
 				Title: "Invalid authorization token",
