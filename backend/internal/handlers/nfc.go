@@ -58,9 +58,10 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 
 	device, err := queries.GetDeviceByMac(ctx, req.DeviceMac)
 	if err != nil {
-		return false, fuego.NotFoundError{
-			Detail: "Device not found",
-		}
+		// return false, fuego.NotFoundError{
+		// 	Detail: "Device not found",
+		// }
+		return false, nil
 	}
 
 	tag, err := queries.GetTagByUid(ctx, req.UID)
@@ -69,9 +70,11 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 			EmployeeID: uuid.Nil,
 			Status:     database.StatusDenied,
 		})
-		return false, fuego.NotFoundError{
-			Detail: "This tag does not exist",
-		}
+		// return false, fuego.NotFoundError{
+		// 	Detail: "This tag does not exist " + req.UID,
+		// }
+
+		return false, nil
 	}
 
 	employee, err := queries.GetEmployeeById(ctx, tag.EmployeeID)
@@ -81,9 +84,11 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 
 	door, err := queries.GetDoorByDeviceId(ctx, device.ID)
 	if err != nil {
-		return false, fuego.BadRequestError{
-			Detail: "This device is not on this door or door do not exists",
-		}
+		// return false, fuego.BadRequestError{
+		// 	Detail: "This device is not on this door or door do not exists",
+		// }
+
+		return false, nil
 	}
 
 	door_permisson, err := queries.GetDoorPermissonByDoorId(ctx, door.ID)
@@ -185,6 +190,7 @@ func (nc *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (str
 	if err != nil {
 		return "", fuego.BadRequestError{
 			Detail: "",
+			Err:    err,
 		}
 	}
 
