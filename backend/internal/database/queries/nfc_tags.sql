@@ -1,20 +1,28 @@
 -- name: CreateNfcTag :one
-INSERT INTO nfc_tags (employee_id, uid, is_active, enrolled_by)
-VALUES(@employee_id, @uid, @is_active, @enrolled_by)
+INSERT INTO nfc_tags (uid)
+VALUES(@uid)
 RETURNING id;
 
--- name: UpdateTagStatus :exec
+-- name: UpdateTagStatus :one
 UPDATE nfc_tags
 SET
-    is_active = COALESCE(sqlc.narg('is_active'), is_active)
-WHERE id = @id;
+    is_active = @is_active
+WHERE id = @id AND is_active = true
+RETURNING id;
 
 -- name: GetTagById :one
-SELECT *
-FROM nfc_tags
-JOIN employees ON employees.id = nfc_tags.employee_id
-JOIN users ON users.id = nfc_tags.enrolled_by
-WHERE nfc_tags.id = @id;
+SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, u.username, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+JOIN users u ON u.id = nt.enrolled_by
+WHERE nt.id = @id;
+
+-- name: GetTagByUid :one
+SELECT nt.id, nt.uid, e.full_name, nt.employee_id, r.role_name, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+JOIN roles r ON r.id = e.role_id
+WHERE nt.uid = @uid;
 
 -- name: FilterTags :many
 SELECT nfc_tags.uid, employees.full_name, is_active, nfc_tags.created_at

@@ -76,3 +76,20 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ge
 	err := row.Scan(&i.ID, &i.Password)
 	return i, err
 }
+
+const updatePassword = `-- name: UpdatePassword :exec
+UPDATE users
+SET
+    password = $1
+WHERE id = $2
+`
+
+type UpdatePasswordParams struct {
+	Password string    `json:"password"`
+	ID       uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error {
+	_, err := q.db.Exec(ctx, updatePassword, arg.Password, arg.ID)
+	return err
+}
