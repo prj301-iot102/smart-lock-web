@@ -6,7 +6,8 @@ import (
 	"github.com/go-fuego/fuego"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
-	"github.com/prj301-iot102/smart-lock-web/backend/internal/services"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/token"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/utils"
 )
 
 type LoginRequest struct {
@@ -15,7 +16,7 @@ type LoginRequest struct {
 }
 
 type AuthResource struct {
-	jwt *services.JwtAuth
+	jwt *token.JwtAuth
 	db  *pgxpool.Pool
 }
 
@@ -37,10 +38,11 @@ func (ar *AuthResource) Login(c fuego.ContextWithBody[LoginRequest]) (string, er
 			Detail: "Invalid username or password",
 		}
 	}
-	checkPassword, err := services.CheckPasswordHash(req.Password, user.Password)
+	checkPassword, err := utils.CheckPasswordHash(req.Password, user.Password)
 	if err != nil {
 		return "", fuego.InternalServerError{
 			Detail: "Unable to hash",
+			Err:    err,
 		}
 	}
 	if !checkPassword {
@@ -60,7 +62,7 @@ func (ar *AuthResource) Login(c fuego.ContextWithBody[LoginRequest]) (string, er
 	return tokenString, nil
 }
 
-func AuthRoutes(s *fuego.Server, db *pgxpool.Pool, jwt *services.JwtAuth) {
+func AuthRoutes(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	rs := AuthResource{
 		db:  db,
 		jwt: jwt,

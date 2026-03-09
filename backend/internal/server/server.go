@@ -10,13 +10,14 @@ import (
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/config"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/handlers"
-	"github.com/prj301-iot102/smart-lock-web/backend/internal/services"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/token"
 	// middleware "github.com/prj301-iot102/smart-lock-web/backend/internal/server/middlewares"
 )
 
 func NewServer() (*fuego.Server, func()) {
 	db := database.NewPool()
-	jwt := services.NewJwtAuth()
+	jwtConfig, _ := env.ParseAs[config.Jwt]()
+	jwt := token.NewJwtAuth(jwtConfig)
 
 	serverCfg, _ := env.ParseAs[config.Server]()
 
@@ -34,8 +35,8 @@ func NewServer() (*fuego.Server, func()) {
 	handlers.AuthRoutes(server, db, jwt)
 	handlers.UsersRoutes(server, db)
 	// handlers.UsersRoutes(server, db)
-	handlers.DeviceRoute(server, db)
-	handlers.NfcRoute(server, db)
+	handlers.DeviceRoute(server, db, jwt)
+	handlers.NfcRoute(server, db, jwt)
 	handlers.AccessLogRoutes(server, db)
 	cleanup := func() { db.Close() }
 
