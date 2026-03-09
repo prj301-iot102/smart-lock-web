@@ -14,3 +14,9 @@ FROM users u
 JOIN employees e ON e.id = u.employee_id
 JOIN roles r ON r.id = e.role_id
 WHERE u.id = @id;
+
+-- name: UpdatePassword :exec
+UPDATE users
+SET
+    password = @password
+WHERE id = @id;
