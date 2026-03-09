@@ -7,10 +7,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/middlewares"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/token"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/utils"
 )
 
 type UsersResource struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	jwt *token.JwtAuth
 }
 
 func (ur *UsersResource) GetUser(c fuego.ContextNoBody) (database.GetAccountByIdRow, error) {
@@ -38,9 +42,15 @@ func (ur *UsersResource) GetUser(c fuego.ContextNoBody) (database.GetAccountById
 
 func UsersRoutes(s *fuego.Server, db *pgxpool.Pool) {
 	rs := UsersResource{
-		db: db,
+		db:  db,
+		jwt: jwt,
 	}
+	authMiddleware := middlewares.NewAuthMiddleware(jwt)
 
 	group := fuego.Group(s, "/api/users")
-	fuego.Post(group, "/{id}", rs.GetUser)
+	fuego.Use(group, authMiddleware.RequireAuthentication)
+
+	fuego.Get(group, "/{id}", rs.GetUser)
+	fuego.Post(group, "/create", rs.CreateUser)
+	fuego.Patch(group, "/update", rs.UpdateUserPassword)
 }
