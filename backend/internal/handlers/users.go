@@ -40,7 +40,93 @@ func (ur *UsersResource) GetUser(c fuego.ContextNoBody) (database.GetAccountById
 	return user, nil
 }
 
-func UsersRoutes(s *fuego.Server, db *pgxpool.Pool) {
+type CreateUserRequest struct {
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	FullName   string `json:"full_name"`
+	Department string `json:"department"`
+}
+
+func (ur *UsersResource) CreateUser(c fuego.ContextWithBody[CreateUserRequest]) (string, error) {
+	req, err := c.Body()
+	if err != nil {
+		return "", fuego.BadRequestError{
+			Detail: "Invalid body",
+		}
+	}
+	hashPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return "", fuego.InternalServerError{
+			Detail: "Unable to hash password",
+			Err:    err,
+		}
+	}
+
+	ctx := context.Background()
+	queries := database.New(ur.db)
+	employeeID, err := queries.CreateEmployee(ctx, database.CreateEmployeeParams{
+		FullName:   req.FullName,
+		Department: req.Department,
+	})
+	if err != nil {
+		return "", fuego.InternalServerError{
+			Detail: "Unable to create new employee",
+			Err:    err,
+		}
+	}
+
+	userID, err := queries.CreateUser(ctx, database.CreateUserParams{
+		Username:   req.Username,
+		Password:   hashPassword,
+		EmployeeID: employeeID,
+	})
+	if err != nil {
+		return "", fuego.InternalServerError{
+			Detail: "Unable to create new user",
+			Err:    err,
+		}
+	}
+
+	return userID.String(), nil
+}
+
+type UpdatePasswordRequest struct {
+	Password string `json:"password"`
+}
+
+func (ur *UsersResource) UpdateUserPassword(c fuego.ContextWithBody[UpdatePasswordRequest]) (any, error) {
+	req, err := c.Body()
+	if err != nil {
+		return nil, fuego.BadRequestError{
+			Detail: "Invalid update body",
+		}
+	}
+
+	if req.Password == "" {
+		return nil, fuego.BadRequestError{
+			Detail: "Empty password",
+		}
+	}
+
+	user_id := c.Value(middlewares.AuthorizationTokenKey).(uuid.UUID)
+	queries := database.New(ur.db)
+	ctx := context.Background()
+	hash_password, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return nil, fuego.InternalServerError{}
+	}
+
+	if err = queries.UpdatePassword(ctx, database.UpdatePasswordParams{
+		Password: hash_password,
+		ID:       user_id,
+	}); err != nil {
+		return nil, fuego.InternalServerError{}
+	}
+
+	return nil, nil
+}
+
+func UsersRoutes(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	rs := UsersResource{
 		db:  db,
 		jwt: jwt,
