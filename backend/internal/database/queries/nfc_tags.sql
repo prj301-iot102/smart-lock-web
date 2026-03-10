@@ -11,10 +11,9 @@ WHERE id = @id AND is_active = true
 RETURNING id;
 
 -- name: GetTagById :one
-SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, u.username, nt.created_at, nt.updated_at
+SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-JOIN users u ON u.id = nt.enrolled_by
 WHERE nt.id = @id;
 
 -- name: GetTagByUid :one

@@ -68,10 +68,9 @@ func (q *Queries) FilterTags(ctx context.Context, isActive pgtype.Bool) ([]Filte
 }
 
 const getTagById = `-- name: GetTagById :one
-SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, u.username, nt.created_at, nt.updated_at
+SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-JOIN users u ON u.id = nt.enrolled_by
 WHERE nt.id = $1
 `
 
@@ -81,7 +80,6 @@ type GetTagByIdRow struct {
 	IsActive   bool               `json:"is_active"`
 	EmployeeID uuid.UUID          `json:"employee_id"`
 	FullName   string             `json:"full_name"`
-	Username   string             `json:"username"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
@@ -95,7 +93,6 @@ func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, 
 		&i.IsActive,
 		&i.EmployeeID,
 		&i.FullName,
-		&i.Username,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
