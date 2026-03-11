@@ -1,74 +1,67 @@
-let currentNfcID = null;
-
-async function getNfcByID() {
+async function getNFC() {
+    const id = document.getElementById("nfcID").value;
     const token = localStorage.getItem("token");
-    const id = document.getElementById("nfcID").value.trim();
-    if(!id) {
-        alert("Please enter NFC ID");
-        return;
-    }
     try{
-        const response = await fetch(`https://smart-lock.patohru.qzz.io/api/nfc/${id}`, 
-            {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Accept": "application/json, application/xml"
-                }
+        const response = await fetch(`https://smart-lock.patohru.qzz.io/api/nfc/${id}`, {
+            method: "GET",
+            headers: {
+                "Accept": "application/json, application/xml",
+                "Authorization": `Bearer ${token}`
             }
-        );
-        if(!response.ok) {
-            throw new Error("NFC not found");
+        });
+        const data = await response.json();
+
+        console.log(data);
+
+        if(response.ok){
+            const table = document.getElementById("nfcTableBody");
+            table.innerHTML = `
+                <tr>
+                    <td>${data.id}</td>
+                    <td>${data.uid}</td>
+                    <td>${data.employee_id}</td>
+                    <td>${data.full_name}</td>
+                    <td>${data.username}</td>
+                    <td>${data.is_active}</td>
+                    <td>${data.created_at}</td>
+                    <td>${data.updated_at}</td>
+                    <td>
+                       <button onclick="revokeNFC('${data.id}')">Revoke</button>
+                    </td>
+                </tr>
+            `;
+        } else {
+            document.getElementById("error-msg").innerText = data.message || "NFC not found";
         }
-        const nfc = await response.json();
-        renderNFCInfo(nfc);
-        
     } catch(error) {
-        console.log("Error getting NFC: ", error);
+        console.log("Cannot connect to server")
     }
 }
 
-function renderNFCInfo(nfc) {
-
-    currentNfcID = nfc.id;
-
-    document.getElementById("nfcID").textContent = nfc.id;
-    document.getElementById("nfcUID").textContent = nfc.uid;
-    document.getElementById("employeeID").textContent = nfc.employee_id;
-    document.getElementById("fullName").textContent = nfc.full_name;
-    document.getElementById("username").textContent = nfc.username;
-    document.getElementById("status").textContent = nfc.is_active ? "ACTIVE" : "REVOKED";
-    document.getElementById("createdAt").textContent = nfc.created_at;
-    document.getElementById("updatedAt").textContent = nfc.updated_at;
-}
-
-async function revokeNFC() {
+async function revokeNFC(id) {
     const token = localStorage.getItem("token");
-    if(!currentNfcID) {
-        alert("No NFC selected");
-        return;
-    }
     if(!confirm("Are you sure to revoke this NFC tag?")) {
         return;
     }
     try {
-        const response = await fetch(`https://smart-lock.patohru.qzz.io/api/nfc/${currentNfcID}/revoke`, 
-            {
-                method: "PATCH",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Accept": "application/json, application/xml",
-                    "Content-Type": "application/json"
-                }
+        const response = await fetch(`https://smart-lock.patohru.qzz.io/api/nfc/${id}/revoke`, {
+            method: "PATCH",
+            headers: {
+                "Accept": "application/json, application/xml",
+                "Authorization": `Bearer ${token}`
             }
-        );
-        if(!response.ok) {
-            throw new Error("Revoke NFC failed");
         }
-        alert("NFC revoked");
-        getNfcByID();    
+        );
+
+        const data = await response.json();
+
+        if(response.ok) {
+            alert("NFC revoked successfully");
+            getNFC();
+        } else {
+            alert(data.message || "Rovoke NFC failed");
+        }
     } catch(error) {
         console.log("Error: ", error)
     }
 }
-
