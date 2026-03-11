@@ -10,10 +10,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/middlewares"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/token"
 )
 
 type DeviceResource struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	jwt *token.JwtAuth
 }
 
 func (dr *DeviceResource) ListDevices(c fuego.ContextNoBody) ([]database.Device, error) {
@@ -93,20 +95,22 @@ func (dr *DeviceResource) EnableCreate(c fuego.ContextNoBody) (bool, error) {
 	return true, nil
 }
 
-func DeviceRoute(s *fuego.Server, db *pgxpool.Pool) {
+func DeviceRoute(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	rs := DeviceResource{
-		db: db,
+		db:  db,
+		jwt: jwt,
 	}
+	authMiddleware := middlewares.NewAuthMiddleware(jwt)
 
 	group := fuego.Group(s, "/api/devices")
 	fuego.Get(group, "/", rs.ListDevices,
-		option.Middleware(middlewares.RequireAuthentication),
+		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Post(group, "/flag", rs.GetDeviceFlag)
 	fuego.Get(group, "/{id}", rs.GetDevice,
-		option.Middleware(middlewares.RequireAuthentication),
+		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Patch(group, "/{id}/enable", rs.EnableCreate,
-		option.Middleware(middlewares.RequireAuthentication),
+		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 }
