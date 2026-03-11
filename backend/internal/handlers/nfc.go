@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
@@ -186,7 +187,7 @@ func (nc *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (str
 			Detail: "This device cannot create",
 		}
 	}
-	existNfc, _ := queries.GetTagByUid(ctx, req.Uid)
+	existNfc, _ := queries.CheckUidExist(ctx, req.Uid)
 	if existNfc.Uid != "" {
 		return "", fuego.BadRequestError{
 			Detail: "NFC already exists",
