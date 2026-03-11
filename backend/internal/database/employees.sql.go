@@ -10,57 +10,45 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	//"github.com/moznion/go-optional"
 )
 
-const getRoleIdByName = `-- name: GetRoleIdByName :one
-SELECT id FROM roles WHERE role_name = $1
+const createEmployee = `-- name: CreateEmployee :one
+INSERT INTO employees (full_name, department)
+VALUES ($1, $2)
+RETURNING id
 `
 
-func (q *Queries) GetRoleIdByName(ctx context.Context, roleName string) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, getRoleIdByName, roleName)
+type CreateEmployeeParams struct {
+	FullName   string `json:"full_name"`
+	Department string `json:"department"`
+}
+
+func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createEmployee, arg.FullName, arg.Department)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
-const createEmployee = `-- name: CreateEmployee :one
-INSERT INTO employees (role_id, full_name, department)
-VALUES($1, $2, $3)
-RETURNING id, full_name, birth, department, created_at, updated_at
+const deleteEmployee = `-- name: DeleteEmployee :exec
+DELETE FROM employees
+WHERE id = $1
 `
 
-type CreateEmployeeParams struct {
-	RoleID     uuid.UUID `json:"role_id"`
-	FullName   string    `json:"full_name"`
-	Department string    `json:"department"`
-}
-
-type CreateEmployeeRow struct {
-	ID         uuid.UUID          `json:"id"`
-	FullName   string             `json:"full_name"`
-	Birth      pgtype.Date        `json:"birth"`
-	Department string             `json:"department"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
-}
-
-func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (CreateEmployeeRow, error) {
-	row := q.db.QueryRow(ctx, createEmployee, arg.RoleID, arg.FullName, arg.Department)
-	var i CreateEmployeeRow
-	err := row.Scan(
-		&i.ID,
-		&i.FullName,
-		&i.Birth,
-		&i.Department,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+func (q *Queries) DeleteEmployee(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteEmployee, id)
+	return err
 }
 
 const getEmployeeById = `-- name: GetEmployeeById :one
-SELECT e.id, e.full_name, e.birth, r.role_name, e.department, e.created_at, e.updated_at
+SELECT
+    e.id,
+    e.full_name,
+    e.birth,
+    r.role_name,
+    e.department,
+    e.created_at,
+    e.updated_at
 FROM employees e
 JOIN roles r ON r.id = e.role_id
 WHERE e.id = $1
@@ -91,59 +79,38 @@ func (q *Queries) GetEmployeeById(ctx context.Context, id uuid.UUID) (GetEmploye
 	return i, err
 }
 
-const updateEmployee = `-- name: UpdateEmployee :exec
-UPDATE employees
-SET
-	role_id    = COALESCE((SELECT id FROM roles WHERE role_name = $1), role_id),
-	full_name  = COALESCE($2, full_name),
-	birth      = COALESCE($3, birth),
-	department = COALESCE($4, department),
-	updated_at = now()
-WHERE id = $5
-`
-
-type UpdateEmployeeParams struct {
-	RoleName   *string     `json:"role_name"`
-	FullName   *string     `json:"full_name"`
-	Birth      pgtype.Date `json:"birth"`
-	Department *string     `json:"department"`
-	ID         uuid.UUID   `json:"id"`
-}
-
-func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error {
-	_, err := q.db.Exec(ctx, updateEmployee,
-		arg.RoleName,
-		arg.FullName,
-		arg.Birth,
-		arg.Department,
-		arg.ID,
-	)
-	return err
-}
-
 const listEmployees = `-- name: ListEmployees :many
-SELECT id, full_name, birth, department, created_at, updated_at
+SELECT
+    id,
+    full_name,
+    birth,
+    department,
+    created_at,
+    updated_at
 FROM employees
 WHERE
-    ($1::text IS NULL OR full_name ILIKE '%' || $1 || '%')
-    AND ($2::text IS NULL OR department = $2)
-    AND ($3::date IS NULL OR birth >= $3)
-    AND ($4::date IS NULL OR birth <= $4)
-    AND ($5::date IS NULL OR created_at::date >= $5)
-    AND ($6::date IS NULL OR created_at::date <= $6)
-ORDER BY created_at DESC
-LIMIT $7 OFFSET $8
+    ($1::text IS NULL OR full_name ILIKE '%' || $1 || '%') AND
+    ($2::date IS NULL OR birth >= $2) AND
+    ($3::date IS NULL OR birth <= $3) AND
+    ($4::text IS NULL OR department ILIKE '%' || $4 || '%') AND
+    ($5::date IS NULL OR created_at >= $5) AND
+    ($6::date IS NULL OR created_at <= $6) AND
+    ($7::date IS NULL OR updated_at >= $7) AND
+    ($8::date IS NULL OR updated_at <= $8)
+LIMIT $9 OFFSET $10
 `
 
 type ListEmployeesParams struct {
-	Search      pgtype.Text `json:"search"`
-	Department  pgtype.Text `json:"department"`
-	BirthFrom   pgtype.Date `json:"birth_from"`
-	BirthTo     pgtype.Date `json:"birth_to"`
-	CreatedFrom pgtype.Date `json:"created_from"`
-	CreatedTo   pgtype.Date `json:"created_to"`
-	Limit       int32       `json:"limit"`
-	Offset      int32       `json:"offset"`
+	Column1 string      `json:"column_1"`
+	Column2 pgtype.Date `json:"column_2"`
+	Column3 pgtype.Date `json:"column_3"`
+	Column4 string      `json:"column_4"`
+	Column5 pgtype.Date `json:"column_5"`
+	Column6 pgtype.Date `json:"column_6"`
+	Column7 pgtype.Date `json:"column_7"`
+	Column8 pgtype.Date `json:"column_8"`
+	Limit   int32       `json:"limit"`
+	Offset  int32       `json:"offset"`
 }
 
 type ListEmployeesRow struct {
@@ -157,12 +124,14 @@ type ListEmployeesRow struct {
 
 func (q *Queries) ListEmployees(ctx context.Context, arg ListEmployeesParams) ([]ListEmployeesRow, error) {
 	rows, err := q.db.Query(ctx, listEmployees,
-		arg.Search,
-		arg.Department,
-		arg.BirthFrom,
-		arg.BirthTo,
-		arg.CreatedFrom,
-		arg.CreatedTo,
+		arg.Column1,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+		arg.Column5,
+		arg.Column6,
+		arg.Column7,
+		arg.Column8,
 		arg.Limit,
 		arg.Offset,
 	)
@@ -170,7 +139,6 @@ func (q *Queries) ListEmployees(ctx context.Context, arg ListEmployeesParams) ([
 		return nil, err
 	}
 	defer rows.Close()
-
 	var items []ListEmployeesRow
 	for rows.Next() {
 		var i ListEmployeesRow
@@ -186,15 +154,38 @@ func (q *Queries) ListEmployees(ctx context.Context, arg ListEmployeesParams) ([
 		}
 		items = append(items, i)
 	}
-	return items, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
-const deleteEmployee = `-- name: DeleteEmployee :exec
-DELETE FROM employees
-WHERE id = $1
+const updateEmployee = `-- name: UpdateEmployee :exec
+UPDATE employees
+SET
+    full_name = COALESCE($1, full_name),
+    birth = COALESCE($2, birth),
+    department = COALESCE($3, department),
+    role_id = COALESCE($4, role_id),
+    updated_at = now()
+WHERE id = $5
 `
 
-func (q *Queries) DeleteEmployee(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteEmployee, id)
+type UpdateEmployeeParams struct {
+	FullName   string      `json:"full_name"`
+	Birth      pgtype.Date `json:"birth"`
+	Department string      `json:"department"`
+	RoleID     uuid.UUID   `json:"role_id"`
+	ID         uuid.UUID   `json:"id"`
+}
+
+func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error {
+	_, err := q.db.Exec(ctx, updateEmployee,
+		arg.FullName,
+		arg.Birth,
+		arg.Department,
+		arg.RoleID,
+		arg.ID,
+	)
 	return err
 }
