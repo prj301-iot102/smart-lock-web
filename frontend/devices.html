@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devices Management</title>
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+</head>
+<body>
+    <div class="layout">
+        <div id="sidebar"></div>
+        <div class="main">
+            <h2>Devices Management</h2>
+            <div class="search-container">
+                <input type="text" id="deviceIdInput" placeholder="Enter device ID">
+                <button onclick="getDeviceByID()">Search</button>
+            </div>
+            <div class="devices-table">
+                <h3>Devices List</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Device Name</th>
+                            <th>MAC Address</th>
+                            <th>Can Create</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="devicesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="js/loadSidebar.js"></script>
+    <script src="js/devices.js"></script>
+    <script src="js/logout.js"></script>
+</body>
+</html>
