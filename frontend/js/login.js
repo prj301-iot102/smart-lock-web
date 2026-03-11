@@ -27,10 +27,10 @@ loginForm.addEventListener("submit", async function(e){
         console.log(data);
 
         if(response.ok) {
-            localStorage.setItem("token", data.token);
+            localStorage.setItem("token", data);
             window.location.href="dashboard.html";
         }else{
-            document.getElementById("error-msg").innerText = data.message || "Login failed";
+            document.getElementById("error-msg").innerText = data.detail || "Login failed";
         }
     }catch(error){
         console.log("Error:", error)
