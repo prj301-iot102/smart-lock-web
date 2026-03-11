@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	optional "github.com/moznion/go-optional"
 )
 
 const createEmployee = `-- name: CreateEmployee :one
@@ -89,28 +90,37 @@ SELECT
     updated_at
 FROM employees
 WHERE
-    ($1::text IS NULL OR full_name ILIKE '%' || $1 || '%') AND
-    ($2::date IS NULL OR birth >= $2) AND
-    ($3::date IS NULL OR birth <= $3) AND
-    ($4::text IS NULL OR department ILIKE '%' || $4 || '%') AND
-    ($5::date IS NULL OR created_at >= $5) AND
-    ($6::date IS NULL OR created_at <= $6) AND
-    ($7::date IS NULL OR updated_at >= $7) AND
-    ($8::date IS NULL OR updated_at <= $8)
+    ($11::text IS NULL OR full_name ILIKE '%' || $1::text || '%') AND
+    ($12::date IS NULL OR birth >= $2::date) AND
+    ($13::date IS NULL OR birth <= $3::date) AND
+    ($14::text IS NULL OR department ILIKE '%' || $4::text || '%') AND
+    ($15::date IS NULL OR created_at >= $5::date) AND
+    ($16::date IS NULL OR created_at <= $6::date) AND
+    ($17::date IS NULL OR updated_at >= $7::date) AND
+    ($18::date IS NULL OR updated_at <= $8::date)
+ORDER BY created_at DESC
 LIMIT $9 OFFSET $10
 `
 
 type ListEmployeesParams struct {
-	Column1 string      `json:"column_1"`
-	Column2 pgtype.Date `json:"column_2"`
-	Column3 pgtype.Date `json:"column_3"`
-	Column4 string      `json:"column_4"`
-	Column5 pgtype.Date `json:"column_5"`
-	Column6 pgtype.Date `json:"column_6"`
-	Column7 pgtype.Date `json:"column_7"`
-	Column8 pgtype.Date `json:"column_8"`
-	Limit   int32       `json:"limit"`
-	Offset  int32       `json:"offset"`
+	Column1     string                  `json:"column_1"`
+	Column2     pgtype.Date             `json:"column_2"`
+	Column3     pgtype.Date             `json:"column_3"`
+	Column4     string                  `json:"column_4"`
+	Column5     pgtype.Date             `json:"column_5"`
+	Column6     pgtype.Date             `json:"column_6"`
+	Column7     pgtype.Date             `json:"column_7"`
+	Column8     pgtype.Date             `json:"column_8"`
+	Limit       int32                   `json:"limit"`
+	Offset      int32                   `json:"offset"`
+	Search      optional.Option[string] `json:"search"`
+	BirthFrom   pgtype.Date             `json:"birth_from"`
+	BirthTo     pgtype.Date             `json:"birth_to"`
+	Department  optional.Option[string] `json:"department"`
+	CreatedFrom pgtype.Date             `json:"created_from"`
+	CreatedTo   pgtype.Date             `json:"created_to"`
+	UpdatedFrom pgtype.Date             `json:"updated_from"`
+	UpdatedTo   pgtype.Date             `json:"updated_to"`
 }
 
 type ListEmployeesRow struct {
@@ -134,6 +144,14 @@ func (q *Queries) ListEmployees(ctx context.Context, arg ListEmployeesParams) ([
 		arg.Column8,
 		arg.Limit,
 		arg.Offset,
+		arg.Search,
+		arg.BirthFrom,
+		arg.BirthTo,
+		arg.Department,
+		arg.CreatedFrom,
+		arg.CreatedTo,
+		arg.UpdatedFrom,
+		arg.UpdatedTo,
 	)
 	if err != nil {
 		return nil, err

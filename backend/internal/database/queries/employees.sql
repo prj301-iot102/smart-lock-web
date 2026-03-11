@@ -28,15 +28,17 @@ SELECT
     updated_at
 FROM employees
 WHERE
-    ($1::text IS NULL OR full_name ILIKE '%' || $1 || '%') AND
-    ($2::date IS NULL OR birth >= $2) AND
-    ($3::date IS NULL OR birth <= $3) AND
-    ($4::text IS NULL OR department ILIKE '%' || $4 || '%') AND
-    ($5::date IS NULL OR created_at >= $5) AND
-    ($6::date IS NULL OR created_at <= $6) AND
-    ($7::date IS NULL OR updated_at >= $7) AND
-    ($8::date IS NULL OR updated_at <= $8)
+    (sqlc.narg(search)::text IS NULL OR full_name ILIKE '%' || $1::text || '%') AND
+    (sqlc.narg(birth_from)::date IS NULL OR birth >= $2::date) AND
+    (sqlc.narg(birth_to)::date IS NULL OR birth <= $3::date) AND
+    (sqlc.narg(department)::text IS NULL OR department ILIKE '%' || $4::text || '%') AND
+    (sqlc.narg(created_from)::date IS NULL OR created_at >= $5::date) AND
+    (sqlc.narg(created_to)::date IS NULL OR created_at <= $6::date) AND
+    (sqlc.narg(updated_from)::date IS NULL OR updated_at >= $7::date) AND
+    (sqlc.narg(updated_to)::date IS NULL OR updated_at <= $8::date)
+ORDER BY created_at DESC
 LIMIT $9 OFFSET $10;
+
 
 
 -- name: UpdateEmployee :exec

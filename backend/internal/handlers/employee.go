@@ -8,8 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-
-	//optional "github.com/moznion/go-optional"
+	"github.com/moznion/go-optional"
 
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
 )
@@ -161,9 +160,9 @@ func (er *EmployeeResource) SearchEmployees(c fuego.ContextNoBody) (EmployeeList
 	page, limit, offset := getPagination(c)
 
 	rows, err := database.New(er.db).ListEmployees(context.Background(), database.ListEmployeesParams{
-		Column1: name,
-		Limit:   int32(limit),
-		Offset:  int32(offset),
+		Search: optional.Some(name),
+		Limit:  int32(limit),
+		Offset: int32(offset),
 	})
 	if err != nil {
 		return EmployeeListResponse{}, fuego.InternalServerError{Detail: "failed to search employees: " + err.Error()}
@@ -191,10 +190,10 @@ func (er *EmployeeResource) FilterByBirth(c fuego.ContextNoBody) (EmployeeListRe
 	}
 
 	rows, err := database.New(er.db).ListEmployees(context.Background(), database.ListEmployeesParams{
-		Column2: birthFrom,
-		Column3: birthTo,
-		Limit:   int32(limit),
-		Offset:  int32(offset),
+		BirthFrom: birthFrom,
+		BirthTo:   birthTo,
+		Limit:     int32(limit),
+		Offset:    int32(offset),
 	})
 	if err != nil {
 		return EmployeeListResponse{}, fuego.InternalServerError{Detail: "failed to filter by birth: " + err.Error()}
@@ -244,10 +243,10 @@ func (er *EmployeeResource) FilterByDateAdded(c fuego.ContextNoBody) (EmployeeLi
 	}
 
 	rows, err := database.New(er.db).ListEmployees(context.Background(), database.ListEmployeesParams{
-		Column5: createdFrom,
-		Column6: createdTo,
-		Limit:   int32(limit),
-		Offset:  int32(offset),
+		CreatedFrom: createdFrom,
+		CreatedTo:   createdTo,
+		Limit:       int32(limit),
+		Offset:      int32(offset),
 	})
 	if err != nil {
 		return EmployeeListResponse{}, fuego.InternalServerError{Detail: "failed to filter by date added: " + err.Error()}
@@ -273,10 +272,10 @@ func (er *EmployeeResource) FilterByDateUpdated(c fuego.ContextNoBody) (Employee
 	}
 
 	rows, err := database.New(er.db).ListEmployees(context.Background(), database.ListEmployeesParams{
-		Column7: updatedFrom,
-		Column8: updatedTo,
-		Limit:   int32(limit),
-		Offset:  int32(offset),
+		UpdatedFrom: updatedFrom,
+		UpdatedTo:   updatedTo,
+		Limit:       int32(limit),
+		Offset:      int32(offset),
 	})
 	if err != nil {
 		return EmployeeListResponse{}, fuego.InternalServerError{Detail: "failed to filter by date updated: " + err.Error()}
