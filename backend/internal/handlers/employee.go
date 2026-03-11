@@ -9,6 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	//optional "github.com/moznion/go-optional"
+
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
 )
 
@@ -21,17 +23,16 @@ type EmployeeResource struct {
 // ── Request types ─────────────────────────────────────────────────────
 
 type CreateEmployeeRequest struct {
-	RoleName   string `json:"role_name"  validate:"required"`
 	FullName   string `json:"full_name"  validate:"required"`
 	Department string `json:"department" validate:"required"`
-	Birth      string `json:"birth"` // YYYY-MM-DD, optional
 }
 
 type UpdateEmployeeRequest struct {
-	RoleName   *string `json:"role_name"`
-	FullName   *string `json:"full_name"`
-	Department *string `json:"department"`
-	Birth      string  `json:"birth"` // YYYY-MM-DD, optional
+	FullName   string      `json:"full_name"`
+	Birth      pgtype.Date `json:"birth"`
+	Department string      `json:"department"`
+	RoleID     uuid.UUID   `json:"role_id"`
+	ID         uuid.UUID   `json:"id"`
 }
 
 // ── Response types ────────────────────────────────────────────────────
@@ -53,7 +54,6 @@ type EmployeeListResponse struct {
 	Limit      int                `json:"limit"`
 	TotalPages int                `json:"total_pages"`
 }
-
 type DeleteEmployeeResponse struct {
 	Message string `json:"message"`
 }
@@ -71,13 +71,6 @@ func parseDate(s string) (pgtype.Date, error) {
 		}
 	}
 	return d, nil
-}
-
-func textOrNull(s string) pgtype.Text {
-	if s == "" {
-		return pgtype.Text{Valid: false}
-	}
-	return pgtype.Text{String: s, Valid: true}
 }
 
 func clampLimit(n int) int {
@@ -116,7 +109,6 @@ func getByIdToResponse(r database.GetEmployeeByIdRow) EmployeeResponse {
 		ID:         r.ID,
 		FullName:   r.FullName,
 		Birth:      r.Birth,
-		RoleName:   r.RoleName,
 		Department: r.Department,
 		CreatedAt:  r.CreatedAt,
 		UpdatedAt:  r.UpdatedAt,
@@ -158,7 +150,7 @@ func (er *EmployeeResource) ListEmployees(c fuego.ContextNoBody) (EmployeeListRe
 	return buildPage(rows, page, limit), nil
 }
 
-// ── GET /employees/search?name= ───────────────────────────────────────
+// ── GET /employees/search ─────────────────────────────────────────────
 
 func (er *EmployeeResource) SearchEmployees(c fuego.ContextNoBody) (EmployeeListResponse, error) {
 	name := c.QueryParam("name")
@@ -169,9 +161,9 @@ func (er *EmployeeResource) SearchEmployees(c fuego.ContextNoBody) (EmployeeList
 	page, limit, offset := getPagination(c)
 
 	rows, err := database.New(er.db).ListEmployees(context.Background(), database.ListEmployeesParams{
-		Search: textOrNull(name),
-		Limit:  int32(limit),
-		Offset: int32(offset),
+		Column1: name,
+		Limit:   int32(limit),
+		Offset:  int32(offset),
 	})
 	if err != nil {
 		return EmployeeListResponse{}, fuego.InternalServerError{Detail: "failed to search employees: " + err.Error()}
@@ -199,10 +191,10 @@ func (er *EmployeeResource) FilterByBirth(c fuego.ContextNoBody) (EmployeeListRe
 	}
 
 	rows, err := database.New(er.db).ListEmployees(context.Background(), database.ListEmployeesParams{
-		BirthFrom: birthFrom,
-		BirthTo:   birthTo,
-		Limit:     int32(limit),
-		Offset:    int32(offset),
+		Column2: birthFrom,
+		Column3: birthTo,
+		Limit:   int32(limit),
+		Offset:  int32(offset),
 	})
 	if err != nil {
 		return EmployeeListResponse{}, fuego.InternalServerError{Detail: "failed to filter by birth: " + err.Error()}
@@ -222,9 +214,9 @@ func (er *EmployeeResource) FilterByDepartment(c fuego.ContextNoBody) (EmployeeL
 	page, limit, offset := getPagination(c)
 
 	rows, err := database.New(er.db).ListEmployees(context.Background(), database.ListEmployeesParams{
-		Department: textOrNull(dept),
-		Limit:      int32(limit),
-		Offset:     int32(offset),
+		Column4: dept,
+		Limit:   int32(limit),
+		Offset:  int32(offset),
 	})
 	if err != nil {
 		return EmployeeListResponse{}, fuego.InternalServerError{Detail: "failed to filter by department: " + err.Error()}
@@ -252,13 +244,42 @@ func (er *EmployeeResource) FilterByDateAdded(c fuego.ContextNoBody) (EmployeeLi
 	}
 
 	rows, err := database.New(er.db).ListEmployees(context.Background(), database.ListEmployeesParams{
-		CreatedFrom: createdFrom,
-		CreatedTo:   createdTo,
-		Limit:       int32(limit),
-		Offset:      int32(offset),
+		Column5: createdFrom,
+		Column6: createdTo,
+		Limit:   int32(limit),
+		Offset:  int32(offset),
 	})
 	if err != nil {
 		return EmployeeListResponse{}, fuego.InternalServerError{Detail: "failed to filter by date added: " + err.Error()}
+	}
+
+	return buildPage(rows, page, limit), nil
+}
+
+func (er *EmployeeResource) FilterByDateUpdated(c fuego.ContextNoBody) (EmployeeListResponse, error) {
+	if c.QueryParam("from") == "" && c.QueryParam("to") == "" {
+		return EmployeeListResponse{}, fuego.BadRequestError{Detail: "at least one of 'from' or 'to' is required"}
+	}
+
+	page, limit, offset := getPagination(c)
+
+	updatedFrom, err := parseDate(c.QueryParam("from"))
+	if err != nil {
+		return EmployeeListResponse{}, err
+	}
+	updatedTo, err := parseDate(c.QueryParam("to"))
+	if err != nil {
+		return EmployeeListResponse{}, err
+	}
+
+	rows, err := database.New(er.db).ListEmployees(context.Background(), database.ListEmployeesParams{
+		Column7: updatedFrom,
+		Column8: updatedTo,
+		Limit:   int32(limit),
+		Offset:  int32(offset),
+	})
+	if err != nil {
+		return EmployeeListResponse{}, fuego.InternalServerError{Detail: "failed to filter by date updated: " + err.Error()}
 	}
 
 	return buildPage(rows, page, limit), nil
@@ -274,7 +295,7 @@ func (er *EmployeeResource) GetEmployee(c fuego.ContextNoBody) (EmployeeResponse
 
 	row, err := database.New(er.db).GetEmployeeById(context.Background(), id)
 	if err != nil {
-		return EmployeeResponse{}, fuego.NotFoundError{Detail: "employee not found"}
+		return EmployeeResponse{}, fuego.NotFoundError{Detail: "employee not found" + err.Error()}
 	}
 
 	return getByIdToResponse(row), nil
@@ -282,59 +303,24 @@ func (er *EmployeeResource) GetEmployee(c fuego.ContextNoBody) (EmployeeResponse
 
 // ── POST /employees ───────────────────────────────────────────────────
 
-func (er *EmployeeResource) CreateEmployee(c fuego.ContextWithBody[CreateEmployeeRequest]) (EmployeeResponse, error) {
+func (er *EmployeeResource) CreateEmployee(c fuego.ContextWithBody[CreateEmployeeRequest]) (uuid.UUID, error) {
 	req, err := c.Body()
 	if err != nil {
-		return EmployeeResponse{}, fuego.BadRequestError{Detail: "invalid request body"}
+		return uuid.Nil, fuego.BadRequestError{Detail: "invalid request body"}
 	}
 
 	ctx := context.Background()
 	q := database.New(er.db)
 
-	if req.FullName == "" || req.FullName == "string" {
-		return EmployeeResponse{}, fuego.BadRequestError{Detail: "full_name is invalid"}
-	}
-	if req.Department == "" || req.Department == "string" {
-		return EmployeeResponse{}, fuego.BadRequestError{Detail: "department is invalid"}
-	}
-	if req.RoleName == "" || req.RoleName == "string" {
-		return EmployeeResponse{}, fuego.BadRequestError{Detail: "role_name is invalid. Valid roles: admin, staff, security"}
-	}
-
-	roleID, err := q.GetRoleIdByName(ctx, req.RoleName)
-	if err != nil || roleID == uuid.Nil {
-		return EmployeeResponse{}, fuego.BadRequestError{Detail: "role not found: " + req.RoleName + ". Valid roles: admin, staff, security"}
-	}
-
 	created, err := q.CreateEmployee(ctx, database.CreateEmployeeParams{
-		RoleID:     roleID,
 		FullName:   req.FullName,
 		Department: req.Department,
 	})
 	if err != nil {
-		return EmployeeResponse{}, fuego.InternalServerError{Detail: "failed to create employee: " + err.Error()}
+		return created, fuego.InternalServerError{Detail: "failed to create employee: " + err.Error()}
 	}
 
-	// Apply birth date if provided then re-fetch to get role_name
-	if req.Birth != "" {
-		birth, err := parseDate(req.Birth)
-		if err != nil {
-			return EmployeeResponse{}, err
-		}
-		if err := q.UpdateEmployee(ctx, database.UpdateEmployeeParams{
-			ID:    created.ID,
-			Birth: birth,
-		}); err != nil {
-			return EmployeeResponse{}, fuego.InternalServerError{Detail: "failed to set birth date: " + err.Error()}
-		}
-	}
-
-	row, err := q.GetEmployeeById(ctx, created.ID)
-	if err != nil {
-		return EmployeeResponse{}, fuego.InternalServerError{Detail: "failed to retrieve employee: " + err.Error()}
-	}
-
-	return getByIdToResponse(row), nil
+	return created, nil
 }
 
 // ── PUT /employees/:id ────────────────────────────────────────────────
@@ -350,19 +336,14 @@ func (er *EmployeeResource) UpdateEmployee(c fuego.ContextWithBody[UpdateEmploye
 		return EmployeeResponse{}, fuego.BadRequestError{Detail: "invalid employee id"}
 	}
 
-	birth, err := parseDate(req.Birth)
-	if err != nil {
-		return EmployeeResponse{}, err
-	}
-
 	ctx := context.Background()
 	q := database.New(er.db)
 
 	if err := q.UpdateEmployee(ctx, database.UpdateEmployeeParams{
-		RoleName:   req.RoleName,
 		FullName:   req.FullName,
-		Birth:      birth,
+		Birth:      req.Birth,
 		Department: req.Department,
+		RoleID:     req.RoleID,
 		ID:         id,
 	}); err != nil {
 		return EmployeeResponse{}, fuego.InternalServerError{Detail: "failed to update employee: " + err.Error()}
@@ -373,7 +354,14 @@ func (er *EmployeeResource) UpdateEmployee(c fuego.ContextWithBody[UpdateEmploye
 		return EmployeeResponse{}, fuego.NotFoundError{Detail: "employee not found"}
 	}
 
-	return getByIdToResponse(row), nil
+	return EmployeeResponse{
+		ID:         row.ID,
+		FullName:   row.FullName,
+		Birth:      row.Birth,
+		Department: row.Department,
+		CreatedAt:  row.CreatedAt,
+		UpdatedAt:  row.UpdatedAt,
+	}, nil
 }
 
 // ── DELETE /employees/:id ─────────────────────────────────────────────
@@ -394,7 +382,7 @@ func (er *EmployeeResource) DeleteEmployee(c fuego.ContextNoBody) (DeleteEmploye
 // ── Routes ────────────────────────────────────────────────────────────
 
 func EmployeeRoutes(s *fuego.Server, db *pgxpool.Pool) {
-	rs := EmployeeResource{db: db}
+	rs := &EmployeeResource{db: db}
 	g := fuego.Group(s, "/employees")
 
 	fuego.Get(g, "/", rs.ListEmployees,
@@ -423,8 +411,14 @@ func EmployeeRoutes(s *fuego.Server, db *pgxpool.Pool) {
 		fuego.OptionQuery("page", "Page number (default: 1)"),
 		fuego.OptionQuery("limit", "Page size 5-10 (default: 10)"),
 	)
+	fuego.Get(g, "/filter/date-updated", rs.FilterByDateUpdated,
+		fuego.OptionQuery("from", "Date updated range start (YYYY-MM-DD)"),
+		fuego.OptionQuery("to", "Date updated range end (YYYY-MM-DD)"),
+		fuego.OptionQuery("page", "Page number (default: 1)"),
+		fuego.OptionQuery("limit", "Page size 5-10 (default: 10)"),
+	)
 	fuego.Post(g, "/", rs.CreateEmployee)
-	fuego.Get(g, "/{id}", rs.GetEmployee)
 	fuego.Put(g, "/{id}", rs.UpdateEmployee)
+	fuego.Get(g, "/{id}", rs.GetEmployee)
 	fuego.Delete(g, "/{id}", rs.DeleteEmployee)
 }
