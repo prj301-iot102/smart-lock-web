@@ -15,7 +15,7 @@ import (
 
 const createEmployee = `-- name: CreateEmployee :one
 INSERT INTO employees (full_name, department)
-VALUES($1, $2)
+VALUES ($1, $2)
 RETURNING id
 `
 
@@ -31,8 +31,25 @@ func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) 
 	return id, err
 }
 
+const deleteEmployee = `-- name: DeleteEmployee :exec
+DELETE FROM employees
+WHERE id = $1
+`
+
+func (q *Queries) DeleteEmployee(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteEmployee, id)
+	return err
+}
+
 const getEmployeeById = `-- name: GetEmployeeById :one
-SELECT e.id, e.full_name, e.birth, r.role_name, e.department, e.created_at, e.updated_at
+SELECT
+    e.id,
+    e.full_name,
+    e.birth,
+    r.role_name,
+    e.department,
+    e.created_at,
+    e.updated_at
 FROM employees e
 JOIN roles r ON r.id = e.role_id
 WHERE e.id = $1
@@ -63,21 +80,121 @@ func (q *Queries) GetEmployeeById(ctx context.Context, id uuid.UUID) (GetEmploye
 	return i, err
 }
 
+const listEmployees = `-- name: ListEmployees :many
+SELECT
+    id,
+    full_name,
+    birth,
+    department,
+    created_at,
+    updated_at
+FROM employees
+WHERE
+    ($11::text IS NULL OR full_name ILIKE '%' || $1::text || '%') AND
+    ($12::date IS NULL OR birth >= $2::date) AND
+    ($13::date IS NULL OR birth <= $3::date) AND
+    ($14::text IS NULL OR department ILIKE '%' || $4::text || '%') AND
+    ($15::date IS NULL OR created_at >= $5::date) AND
+    ($16::date IS NULL OR created_at <= $6::date) AND
+    ($17::date IS NULL OR updated_at >= $7::date) AND
+    ($18::date IS NULL OR updated_at <= $8::date)
+ORDER BY created_at DESC
+LIMIT $9 OFFSET $10
+`
+
+type ListEmployeesParams struct {
+	Column1     string                  `json:"column_1"`
+	Column2     pgtype.Date             `json:"column_2"`
+	Column3     pgtype.Date             `json:"column_3"`
+	Column4     string                  `json:"column_4"`
+	Column5     pgtype.Date             `json:"column_5"`
+	Column6     pgtype.Date             `json:"column_6"`
+	Column7     pgtype.Date             `json:"column_7"`
+	Column8     pgtype.Date             `json:"column_8"`
+	Limit       int32                   `json:"limit"`
+	Offset      int32                   `json:"offset"`
+	Search      optional.Option[string] `json:"search"`
+	BirthFrom   pgtype.Date             `json:"birth_from"`
+	BirthTo     pgtype.Date             `json:"birth_to"`
+	Department  optional.Option[string] `json:"department"`
+	CreatedFrom pgtype.Date             `json:"created_from"`
+	CreatedTo   pgtype.Date             `json:"created_to"`
+	UpdatedFrom pgtype.Date             `json:"updated_from"`
+	UpdatedTo   pgtype.Date             `json:"updated_to"`
+}
+
+type ListEmployeesRow struct {
+	ID         uuid.UUID          `json:"id"`
+	FullName   string             `json:"full_name"`
+	Birth      pgtype.Date        `json:"birth"`
+	Department string             `json:"department"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) ListEmployees(ctx context.Context, arg ListEmployeesParams) ([]ListEmployeesRow, error) {
+	rows, err := q.db.Query(ctx, listEmployees,
+		arg.Column1,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+		arg.Column5,
+		arg.Column6,
+		arg.Column7,
+		arg.Column8,
+		arg.Limit,
+		arg.Offset,
+		arg.Search,
+		arg.BirthFrom,
+		arg.BirthTo,
+		arg.Department,
+		arg.CreatedFrom,
+		arg.CreatedTo,
+		arg.UpdatedFrom,
+		arg.UpdatedTo,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListEmployeesRow
+	for rows.Next() {
+		var i ListEmployeesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FullName,
+			&i.Birth,
+			&i.Department,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateEmployee = `-- name: UpdateEmployee :exec
 UPDATE employees
 SET
-	full_name = COALESCE($1, full_name),
-	birth = COALESCE($2, birth),
-	department = COALESCE($3, department),
-	updated_at = now()
-WHERE id = $4
+    full_name = COALESCE($1, full_name),
+    birth = COALESCE($2, birth),
+    department = COALESCE($3, department),
+    role_id = COALESCE($4, role_id),
+    updated_at = now()
+WHERE id = $5
 `
 
 type UpdateEmployeeParams struct {
-	FullName   optional.Option[string] `json:"full_name"`
-	Birth      pgtype.Date             `json:"birth"`
-	Department optional.Option[string] `json:"department"`
-	ID         uuid.UUID               `json:"id"`
+	FullName   string      `json:"full_name"`
+	Birth      pgtype.Date `json:"birth"`
+	Department string      `json:"department"`
+	RoleID     uuid.UUID   `json:"role_id"`
+	ID         uuid.UUID   `json:"id"`
 }
 
 func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) error {
@@ -85,6 +202,7 @@ func (q *Queries) UpdateEmployee(ctx context.Context, arg UpdateEmployeeParams) 
 		arg.FullName,
 		arg.Birth,
 		arg.Department,
+		arg.RoleID,
 		arg.ID,
 	)
 	return err

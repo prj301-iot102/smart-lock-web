@@ -1,0 +1,23 @@
+.sidebar-menu ul li{
+    list-style-type: none;
+}
+
+.sidebar-menu ul li a{
+    text-decoration: none;
+    color: white;
+}
+
+.sidebar{
+    height: 40%;
+}
+.sidebar-menu ul{
+    display: flex;
+    flex-direction: column;
+    row-gap: 30px;
+}
+
+#logoutBtn {
+    border: none;
+    color: white;
+    background-color: #00c2c7;
+}

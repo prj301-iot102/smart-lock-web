@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Logs</title>
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+</head>
+<body>
+    <div class="layout">
+        <div id="sidebar"></div>
+        <div class="main">
+            <h2>Access Logs</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Time</th>
+                        <th>Full Name</th>
+                        <th>UID</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <script src="js/loadSidebar.js"></script>
+    <script src="js/logs.js"></script>
+</body>
+</html>
