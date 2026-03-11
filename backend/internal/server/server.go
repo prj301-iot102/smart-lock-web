@@ -23,7 +23,7 @@ func NewServer() (*fuego.Server, func()) {
 	corsCfg, _ := env.ParseAs[config.CorsConfig]()
 
 	server := fuego.NewServer(
-		fuego.WithAddr(fmt.Sprintf("localhost:%d", serverCfg.Port)),
+		fuego.WithAddr(fmt.Sprintf(":%d", serverCfg.Port)),
 		fuego.WithGlobalMiddlewares(middlewares.Cors(corsCfg.AllowOrigin)),
 		fuego.WithEngineOptions(
 			fuego.WithOpenAPIConfig(fuego.OpenAPIConfig{
