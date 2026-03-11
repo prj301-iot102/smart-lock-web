@@ -11,6 +11,8 @@ import (
 	"github.com/moznion/go-optional"
 
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/middlewares"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/token"
 )
 
 // ── Resource ──────────────────────────────────────────────────────────
@@ -380,9 +382,12 @@ func (er *EmployeeResource) DeleteEmployee(c fuego.ContextNoBody) (DeleteEmploye
 
 // ── Routes ────────────────────────────────────────────────────────────
 
-func EmployeeRoutes(s *fuego.Server, db *pgxpool.Pool) {
+func EmployeeRoutes(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	rs := &EmployeeResource{db: db}
-	g := fuego.Group(s, "/employees")
+	authMiddleware := middlewares.NewAuthMiddleware(jwt)
+
+	g := fuego.Group(s, "/api/employees")
+	fuego.Use(g, authMiddleware.RequireAuthentication)
 
 	fuego.Get(g, "/", rs.ListEmployees,
 		fuego.OptionQuery("page", "Page number (default: 1)"),
