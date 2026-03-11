@@ -186,6 +186,13 @@ func (nc *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (str
 			Detail: "This device cannot create",
 		}
 	}
+	existNfc, _ := queries.CheckUidExist(ctx, req.Uid)
+	if existNfc.Uid != "" {
+		return "", fuego.BadRequestError{
+			Detail: "NFC already exists",
+		}
+	}
+
 	new_nfc, err := queries.CreateNfcTag(ctx, req.Uid)
 	if err != nil {
 		return "", fuego.BadRequestError{
