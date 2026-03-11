@@ -35,7 +35,6 @@ func NewServer() (*fuego.Server, func()) {
 
 	handlers.AuthRoutes(server, db, jwt)
 	handlers.EmployeeRoutes(server, db)
-	handlers.NfcRoute(server, db)
 	handlers.UsersRoutes(server, db, jwt)
 	handlers.DeviceRoute(server, db, jwt)
 	handlers.NfcRoute(server, db, jwt)
