@@ -5,6 +5,8 @@ import (
 	"math"
 
 	"github.com/go-fuego/fuego"
+	"github.com/go-fuego/fuego/option"
+	"github.com/go-fuego/fuego/param"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -386,7 +388,9 @@ func EmployeeRoutes(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	rs := &EmployeeResource{db: db}
 	authMiddleware := middlewares.NewAuthMiddleware(jwt)
 
-	g := fuego.Group(s, "/api/employees")
+	g := fuego.Group(s, "/api/employees",
+		option.Middleware(authMiddleware.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Use(g, authMiddleware.RequireAuthentication)
 
 	fuego.Get(g, "/", rs.ListEmployees,

@@ -135,17 +135,13 @@ func UsersRoutes(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	}
 	authMiddleware := middlewares.NewAuthMiddleware(jwt)
 
-	group := fuego.Group(s, "/api/users")
+	group := fuego.Group(s, "/api/users",
+		option.Middleware(authMiddleware.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Use(group, authMiddleware.RequireAuthentication)
 
-	fuego.Get(group, "/{id}", rs.GetUser,
-		option.Middleware(authMiddleware.RequireAuthentication),
-		option.Header("Authorization", "Bearer token", param.Required()))
-	fuego.Post(group, "/create", rs.CreateUser,
-		option.Middleware(authMiddleware.RequireAuthentication),
-		option.Header("Authorization", "Bearer token", param.Required()))
-	fuego.Patch(group, "/update", rs.UpdateUserPassword,
-		option.Middleware(authMiddleware.RequireAuthentication),
-		option.Header("Authorization", "Bearer token", param.Required()))
+	fuego.Get(group, "/{id}", rs.GetUser)
+	fuego.Post(group, "/create", rs.CreateUser)
+	fuego.Patch(group, "/update", rs.UpdateUserPassword)
 
 }
