@@ -13,26 +13,32 @@ import (
 )
 
 const createAccessLog = `-- name: CreateAccessLog :one
-INSERT INTO access_logs (employee_id, door_id, status)
-VALUES($1, $2, $3)
+INSERT INTO access_logs (employee_id, nfc_tag_id, door_id, status)
+VALUES($1, $2, $3, $4)
 RETURNING id
 `
 
 type CreateAccessLogParams struct {
 	EmployeeID uuid.UUID `json:"employee_id"`
+	NfcTagID   uuid.UUID `json:"nfc_tag_id"`
 	DoorID     uuid.UUID `json:"door_id"`
 	Status     Status    `json:"status"`
 }
 
 func (q *Queries) CreateAccessLog(ctx context.Context, arg CreateAccessLogParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createAccessLog, arg.EmployeeID, arg.DoorID, arg.Status)
+	row := q.db.QueryRow(ctx, createAccessLog,
+		arg.EmployeeID,
+		arg.NfcTagID,
+		arg.DoorID,
+		arg.Status,
+	)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
 const getAccessLogs = `-- name: GetAccessLogs :many
-SELECT al.id, e.full_name, nt.uid, al.status, al.created_at
+SELECT al.id, e.full_name, nt.uid, d.door_name, al.status, al.created_at
 FROM access_logs al
 JOIN employees e ON e.id = al.employee_id
 JOIN nfc_tags nt ON nt.id = al.nfc_tag_id
@@ -44,6 +50,7 @@ type GetAccessLogsRow struct {
 	ID        uuid.UUID          `json:"id"`
 	FullName  string             `json:"full_name"`
 	Uid       string             `json:"uid"`
+	DoorName  string             `json:"door_name"`
 	Status    Status             `json:"status"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
@@ -61,6 +68,7 @@ func (q *Queries) GetAccessLogs(ctx context.Context) ([]GetAccessLogsRow, error)
 			&i.ID,
 			&i.FullName,
 			&i.Uid,
+			&i.DoorName,
 			&i.Status,
 			&i.CreatedAt,
 		); err != nil {
