@@ -85,7 +85,7 @@ async function listNfcTags() {
             }
         );
         if(!response.ok) {
-            nfcMessage.textContent = "Failed to lead NFC tags";
+            nfcMessage.textContent = "Failed to load NFC tags";
             return;
         }
         const nfcTags = await response.json();
