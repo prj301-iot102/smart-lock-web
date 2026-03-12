@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/users.css">
+</head>
+<body>
+    <div class="layout">
+        <div id="sidebar"></div>
+        <div class="main">
+            <h2>User Management</h2>
+            <div class="search-container">
+                <input type="text" id="userIdInput" placeholder="Enter user ID">
+                <button onclick="getUserByID()">Search</button>
+            </div>
+            <div class="user-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody"></tbody>
+                </table>
+                <p id="userMessage"></p>
+            </div>
+            <div class="create-user">
+                <button onclick="showCreateForm()">+ Create User</button>
+                <div id="createUserForm" class="hidden-form">
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName">
+                    </div>
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <input type="text" id="department">
+                    </div>
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password">
+                    </div>
+                    <button onclick="hideCreateForm()">Cancel</button>
+                    <button onclick="createUser()">Create</button>
+                </div>
+            </div>
+            <div class="update-password">
+                <h3>Change Password</h3>
+                <div>
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword">
+                </div>
+                <button onclick="updatePassword()">Update</button>
+            </div>
+        </div>
+    </div>
+    <script src="js/loadSidebar.js"></script>
+    <script src="js/users.js"></script>
+    <script src="js/logout.js"></script>
+</body>
+</html>
