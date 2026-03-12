@@ -99,6 +99,7 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 	if employee.RoleName != door_permisson.RoleName {
 		queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
 			EmployeeID: employee.ID,
+			NfcTagID:   tag.ID,
 			DoorID:     door.ID,
 			Status:     database.StatusDenied,
 		})
@@ -107,6 +108,7 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 
 	queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
 		EmployeeID: employee.ID,
+		NfcTagID:   tag.ID,
 		DoorID:     door.ID,
 		Status:     database.StatusGranted,
 	})
