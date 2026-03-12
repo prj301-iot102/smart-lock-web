@@ -6,27 +6,54 @@
     <title>Access Logs</title>
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/logs.css">
 </head>
 <body>
     <div class="layout">
+
         <div id="sidebar"></div>
-        <div class="main">
-            <h2>Access Logs</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Time</th>
-                        <th>Full Name</th>
-                        <th>UID</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="logsTableBody"></tbody>
-            </table>
+    
+    <div class="main">
+        <h2>Access Logs</h2>
+
+        <div class="logs-layout">
+
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Full Name</th>
+                            <th>UID</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody"></tbody>
+                </table>
+            </div>
+            <div class="stats">
+                <div class="stat-card">
+                    <p>Total Access</p>
+                    <h3 id="totalAccess"></h3>
+                </div>
+
+                <div class="stat-card">
+                    <p>Granted</p>
+                    <h3 id="granted">1100</h3>
+                </div>
+
+                <div class="stat-card">
+                    <p>Denied</p>
+                    <h3 id="denied">145</h3>
+                </div>
+            </div>
         </div>
     </div>
+    </div>
+
     <script src="js/loadSidebar.js"></script>
     <script src="js/logs.js"></script>
+    <script src="js/logout.js"></script>
+    <!-- <script src="js/auth.js"></script> -->
 </body>
 </html>
