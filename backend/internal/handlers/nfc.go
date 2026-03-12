@@ -159,6 +159,17 @@ func (nr *NfcResource) EnableCreate(c fuego.ContextNoBody) (bool, error) {
 	return true, nil
 }
 
+func (nr *NfcResource) ListNfcTags(c fuego.ContextNoBody) ([]database.ListNfcTagsRow, error) {
+	ctx := context.Background()
+	queries := database.New(nr.db)
+	tags, err := queries.ListNfcTags(ctx)
+	if err != nil {
+		return []database.ListNfcTagsRow{}, fuego.InternalServerError{}
+	}
+
+	return tags, nil
+}
+
 type CreateNfcRequest struct {
 	Uid string `json:"uid"`
 	Mac string `json:"mac_address"`
@@ -221,14 +232,14 @@ func NfcRoute(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 
 	group := fuego.Group(s, "/api/nfc")
 
+	fuego.Get(group, "/", rs.ListNfcTags,
+		option.Middleware(authMiddleware.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Get(group, "/{id}", rs.GetNfc,
 		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Post(group, "/validate", rs.ValidateNfc)
 	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc,
-		option.Middleware(authMiddleware.RequireAuthentication),
-		option.Header("Authorization", "Bearer token", param.Required()))
-	fuego.Patch(group, "/{device_id}/enable", rs.EnableCreate,
 		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 
