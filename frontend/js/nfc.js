@@ -3,8 +3,11 @@ let currentNfcID = null;
 async function getNfcByID() {
     const token = localStorage.getItem("token");
     const id = document.getElementById("nfcID").value.trim();
+    const nfcStatus = document.getElementById("nfc-status");
+    nfcStatus.innerHTML = ""
     if(!id) {
-        alert("Please enter NFC ID");
+        nfcStatus.innerHTML = " : NOT AVAILABLE!!!"
+        renderNFCInfo(nfc);
         return;
     }
     try{
@@ -18,8 +21,11 @@ async function getNfcByID() {
             }
         );
         if(!response.ok) {
+            nfcStatus.innerHTML = " : NOT FOUND!!!"
+            renderNFCInfo(nfc);
             throw new Error("NFC not found");
         }
+        nfcStatus.innerHTML = " : FOUND!!!"
         const nfc = await response.json();
         renderNFCInfo(nfc);
         
@@ -29,9 +35,7 @@ async function getNfcByID() {
 }
 
 function renderNFCInfo(nfc) {
-
     currentNfcID = nfc.id;
-
     document.getElementById("nfcID").textContent = nfc.id;
     document.getElementById("nfcUID").textContent = nfc.uid;
     document.getElementById("employeeID").textContent = nfc.employee_id;
@@ -72,3 +76,18 @@ async function revokeNFC() {
     }
 }
 
+var input = document.getElementById("nfcID");
+var btn = document.getElementsByClassName("searchbtn");
+input.addEventListener("keyup", function(e) {
+  if (e.keyCode === 13) {
+    e.preventDefault();
+    getNfcByID();
+  }
+});
+
+document.addEventListener("click", function(e) {
+    if (e.target.classList.contains("searchbtn")) {
+        e.preventDefault();
+        getNfcByID();
+    }
+});
