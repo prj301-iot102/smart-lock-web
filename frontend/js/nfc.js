@@ -15,6 +15,7 @@ async function getNFC() {
                 "Accept": "application/json, application/xml",
                 "Authorization": `Bearer ${token}`
             }
+        }
         );
         if(!response.ok) {
             nfcStatus.innerHTML = " : NOT FOUND!!!"
