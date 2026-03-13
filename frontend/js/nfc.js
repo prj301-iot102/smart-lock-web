@@ -71,6 +71,36 @@ function renderNFCInfo(nfc) {
     document.getElementById("updatedAt").textContent = nfc.updated_at;
 }
 
+async function activeNFC(id) {
+    const token = localStorage.getItem("token");
+    if (!confirm("Are you sure to active this NFC tag?")) {
+        return;
+    }
+    try {
+        const response = await fetch(
+            `https://smart-lock.patohru.qzz.io/api/nfc/${id}`,
+            {
+                method: "PATCH",
+                headers: {
+                    Accept: "application/json, application/xml",
+                    Authorization: `Bearer ${token}`,
+                },
+            },
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert("NFC active successfully");
+            getNFC();
+        } else {
+            alert(data.message || "Active NFC failed");
+        }
+    } catch (error) {
+        console.log("Error: ", error);
+    }
+}
+
 async function revokeNFC(id) {
     const token = localStorage.getItem("token");
     if (!confirm("Are you sure to revoke this NFC tag?")) {
