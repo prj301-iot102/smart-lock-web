@@ -1,0 +1,17 @@
+services:
+  frontend:
+    image: ${REGISTRY}/frontend:latest
+    container_name: smart-lock-web
+    restart: on-failure:5
+    ports:
+      - "8081:80"
+    volumes:
+      - .:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - web
+
+networks:
+  web:
+    name: smart-lock-web
+    external: true

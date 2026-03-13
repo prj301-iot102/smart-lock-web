@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/go-fuego/fuego"
+	"github.com/go-fuego/fuego/option"
+	"github.com/go-fuego/fuego/param"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
@@ -133,10 +135,13 @@ func UsersRoutes(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	}
 	authMiddleware := middlewares.NewAuthMiddleware(jwt)
 
-	group := fuego.Group(s, "/api/users")
+	group := fuego.Group(s, "/api/users",
+		option.Middleware(authMiddleware.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Use(group, authMiddleware.RequireAuthentication)
 
 	fuego.Get(group, "/{id}", rs.GetUser)
 	fuego.Post(group, "/create", rs.CreateUser)
 	fuego.Patch(group, "/update", rs.UpdateUserPassword)
+
 }

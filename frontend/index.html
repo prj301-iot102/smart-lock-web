@@ -40,5 +40,14 @@
         
     </div>
     <script src="js/login.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('token');
+  
+            if (token) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
 </body>
 </html>
