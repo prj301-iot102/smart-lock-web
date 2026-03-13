@@ -71,7 +71,8 @@ function renderNFCInfo(nfc) {
     document.getElementById("updatedAt").textContent = nfc.updated_at;
 }
 
-async function activeNFC(id) {
+async function activeNFC() {
+    const id = document.getElementById("nfcID").value.trim();
     const token = localStorage.getItem("token");
     if (!confirm("Are you sure to active this NFC tag?")) {
         return;
@@ -94,14 +95,15 @@ async function activeNFC(id) {
             alert("NFC active successfully");
             getNFC();
         } else {
-            alert(data.message || "Active NFC failed");
+            alert(data.message || " NFC failed");
         }
     } catch (error) {
         console.log("Error: ", error);
     }
 }
 
-async function revokeNFC(id) {
+async function revokeNFC() {
+    const id = document.getElementById("nfcID").value.trim();
     const token = localStorage.getItem("token");
     if (!confirm("Are you sure to revoke this NFC tag?")) {
         return;
