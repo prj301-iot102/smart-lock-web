@@ -1,0 +1,134 @@
+.layout{
+    display:flex;
+    flex-direction: row;
+}
+
+.header {
+    display:flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: center;
+}
+
+.header-title {
+    width: 1300px;
+}
+
+.search-container{
+    width: 420px;
+    height: 50px;
+    display: flex;
+    flex-direction:row;
+    align-items: center;
+    overflow: hidden;
+    transition: width 0.3s ease;
+    margin: 0;
+}
+
+.search-container button {
+    border: none;
+    height: 50px;
+    width: 50px;
+}
+
+.searchbtn{
+    height: 30px;
+    width: 30px;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-color: white;
+    border-radius: 12px;
+    padding: 8px;
+    font-size: large;
+}
+
+.search-container input{
+    width: 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.search-container:hover{
+    width: 420px;
+    background-color: white;
+    border-radius: 12px;
+}
+
+.search-container:hover input{
+    width: 350px;
+    opacity: 1;
+    margin-left: 8px;
+    background-color: white;
+    border: none;
+}
+
+input:focus {
+    outline: none;
+}
+
+.nfc-info-status {
+    margin: 5px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.nfc-info-card{
+    width: 1540px;
+    padding: 5px 0;
+    background-color: #ffffff;
+    border-radius: 12px;
+}
+
+.nfc-info-card p{
+    display: flex;
+    flex-direction: row;
+    width: 1450px;
+    margin: 10px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.nfc-info-card p strong{
+    display:flex;
+    width: 200px;
+    background-color: transparent;
+}
+
+.nfc-info p{
+    padding: 10px 10px;
+    color: #9ca3af;
+    font-weight: 500;
+    text-align: left;
+    font-size: 14px;
+}
+
+.revoke {
+    border: none;
+    background: none;
+    width: 100px;
+    padding: 12px 10px;
+  
+    display: flex;
+    align-items: center;
+    justify-content:left;
+    gap: 10px;
+    margin: 10px;
+  
+    font-size: 15px;
+    color: #374151;
+    cursor: pointer;
+  
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}   
+
+.revoke:hover {
+    background: rgba(255, 0, 0, 0.384);
+}
+
+.revoke:active {
+    background: rgba(255, 0, 0, 0.5);
+}

@@ -1,6 +1,13 @@
 async function getNFC() {
-    const id = document.getElementById("nfcID").value;
     const token = localStorage.getItem("token");
+    const id = document.getElementById("nfcID").value.trim();
+    const nfcStatus = document.getElementById("nfc-status");
+    nfcStatus.innerHTML = ""
+    if(!id) {
+        nfcStatus.innerHTML = " : NOT AVAILABLE!!!"
+        renderNFCInfo(nfc);
+        return;
+    }
     try{
         const response = await fetch(`https://smart-lock.patohru.qzz.io/api/nfc/${id}`, {
             method: "GET",
@@ -8,6 +15,16 @@ async function getNFC() {
                 "Accept": "application/json, application/xml",
                 "Authorization": `Bearer ${token}`
             }
+        );
+        if(!response.ok) {
+            nfcStatus.innerHTML = " : NOT FOUND!!!"
+            renderNFCInfo(nfc);
+            throw new Error("NFC not found");
+        }
+        nfcStatus.innerHTML = " : FOUND!!!"
+        const nfc = await response.json();
+        renderNFCInfo(nfc);
+        
         });
         const data = await response.json();
 
@@ -36,6 +53,17 @@ async function getNFC() {
     } catch(error) {
         console.log("Cannot connect to server")
     }
+}
+
+function renderNFCInfo(nfc) {
+    currentNfcID = nfc.id;
+    document.getElementById("nfcID").textContent = nfc.id;
+    document.getElementById("nfcUID").textContent = nfc.uid;
+    document.getElementById("employeeID").textContent = nfc.employee_id;
+    document.getElementById("fullName").textContent = nfc.full_name;
+    document.getElementById("status").textContent = nfc.is_active ? "ACTIVE" : "REVOKED";
+    document.getElementById("createdAt").textContent = nfc.created_at;
+    document.getElementById("updatedAt").textContent = nfc.updated_at;
 }
 
 async function revokeNFC(id) {
@@ -116,6 +144,22 @@ async function listNfcTags() {
         console.log("Error listing NFC Tags: ", error);
     }
 }
+
+var input = document.getElementById("nfcID");
+var btn = document.getElementsByClassName("searchbtn");
+input.addEventListener("keyup", function(e) {
+  if (e.keyCode === 13) {
+    e.preventDefault();
+    getNfcByID();
+  }
+});
+
+document.addEventListener("click", function(e) {
+    if (e.target.classList.contains("searchbtn")) {
+        e.preventDefault();
+        getNfcByID();
+    }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     listNfcTags();
