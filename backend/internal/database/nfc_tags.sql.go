@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	optional "github.com/moznion/go-optional"
 )
 
 const checkUidExist = `-- name: CheckUidExist :one
@@ -88,20 +89,20 @@ func (q *Queries) FilterTags(ctx context.Context, isActive pgtype.Bool) ([]Filte
 const getTagById = `-- name: GetTagById :one
 SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at
 FROM nfc_tags nt
-JOIN employees e ON e.id = nt.employee_id
-JOIN roles r ON r.id = e.role_id
+LEFT JOIN employees e ON e.id = nt.employee_id
+LEFT JOIN roles r ON r.id = e.role_id
 WHERE nt.id = $1
 `
 
 type GetTagByIdRow struct {
-	ID         uuid.UUID          `json:"id"`
-	Uid        string             `json:"uid"`
-	IsActive   bool               `json:"is_active"`
-	EmployeeID uuid.UUID          `json:"employee_id"`
-	FullName   string             `json:"full_name"`
-	RoleName   string             `json:"role_name"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ID         uuid.UUID               `json:"id"`
+	Uid        string                  `json:"uid"`
+	IsActive   bool                    `json:"is_active"`
+	EmployeeID uuid.UUID               `json:"employee_id"`
+	FullName   optional.Option[string] `json:"full_name"`
+	RoleName   optional.Option[string] `json:"role_name"`
+	CreatedAt  pgtype.Timestamptz      `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz      `json:"updated_at"`
 }
 
 func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, error) {
@@ -201,7 +202,7 @@ const updateTagStatus = `-- name: UpdateTagStatus :one
 UPDATE nfc_tags
 SET
     is_active = $1
-WHERE id = $2 AND is_active = true
+WHERE id = $2
 RETURNING id
 `
 
