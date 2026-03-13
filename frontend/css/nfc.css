@@ -51,13 +51,13 @@
     border: none;
 }
 
-.search-container:hover{
+.search-container{
     width: 420px;
     background-color: white;
     border-radius: 12px;
 }
 
-.search-container:hover input{
+.search-container input{
     width: 350px;
     opacity: 1;
     margin-left: 8px;
@@ -105,8 +105,13 @@ input:focus {
     font-size: 14px;
 }
 
+.nfc-button {
+    display: flex;
+    flex-direction: row;
+}
+
 .revoke {
-    border: none;
+    border: #9ca3af 2px solid;
     background: none;
     width: 100px;
     padding: 12px 10px;
@@ -131,4 +136,32 @@ input:focus {
 
 .revoke:active {
     background: rgba(255, 0, 0, 0.5);
+}
+
+.check {
+    border: #9ca3af 2px solid;
+    background: none;
+    width: 100px;
+    padding: 12px 10px;
+  
+    display: flex;
+    align-items: center;
+    justify-content:left;
+    gap: 10px;
+    margin: 10px;
+  
+    font-size: 15px;
+    color: #374151;
+    cursor: pointer;
+  
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}   
+
+.check:hover {
+    background: rgba(0, 255, 0, 0.384);
+}
+
+.check:active {
+    background: rgba(0, 255, 0, 0.5);
 }
