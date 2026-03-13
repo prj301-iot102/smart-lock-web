@@ -10,19 +10,28 @@ SET
 WHERE id = @id AND is_active = true
 RETURNING id;
 
--- name: GetTagById :one
-SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, u.username, nt.created_at, nt.updated_at
+-- name: ListNfcTags :many
+SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-JOIN users u ON u.id = nt.enrolled_by
+JOIN roles r ON r.id = e.role_id;
+
+-- name: GetTagById :one
+SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+JOIN roles r ON r.id = e.role_id
 WHERE nt.id = @id;
 
 -- name: GetTagByUid :one
-SELECT nt.id, nt.uid, e.full_name, nt.employee_id, r.role_name, u.username, nt.created_at, nt.updated_at
+SELECT nt.id, nt.uid, e.full_name, nt.employee_id, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-JOIN users u ON u.id = nt.enrolled_by
-JOIN roles r ON r.id = e.role_id
+WHERE nt.uid = @uid;
+
+-- name: CheckUidExist :one
+SELECT nt.id, nt.uid
+FROM nfc_tags nt
 WHERE nt.uid = @uid;
 
 -- name: FilterTags :many

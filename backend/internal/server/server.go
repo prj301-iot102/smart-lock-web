@@ -10,19 +10,21 @@ import (
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/config"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/handlers"
-	"github.com/prj301-iot102/smart-lock-web/backend/internal/services"
-	// middleware "github.com/prj301-iot102/smart-lock-web/backend/internal/server/middlewares"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/middlewares"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/token"
 )
 
 func NewServer() (*fuego.Server, func()) {
 	db := database.NewPool()
-	jwt := services.NewJwtAuth()
+	jwtConfig, _ := env.ParseAs[config.Jwt]()
+	jwt := token.NewJwtAuth(jwtConfig)
 
 	serverCfg, _ := env.ParseAs[config.Server]()
+	corsCfg, _ := env.ParseAs[config.CorsConfig]()
 
 	server := fuego.NewServer(
 		fuego.WithAddr(fmt.Sprintf(":%d", serverCfg.Port)),
-		// fuego.WithGlobalMiddlewares(middleware.Cors),
+		fuego.WithGlobalMiddlewares(middlewares.Cors(corsCfg.AllowOrigin)),
 		fuego.WithEngineOptions(
 			fuego.WithOpenAPIConfig(fuego.OpenAPIConfig{
 				DisableDefaultServer: true,
@@ -32,8 +34,11 @@ func NewServer() (*fuego.Server, func()) {
 	)
 
 	handlers.AuthRoutes(server, db, jwt)
-	// handlers.UsersRoutes(server, db)
-	handlers.NfcRoute(server, db)
+	handlers.EmployeeRoutes(server, db, jwt)
+	handlers.UsersRoutes(server, db, jwt)
+	handlers.DeviceRoute(server, db, jwt)
+	handlers.NfcRoute(server, db, jwt)
+	handlers.AccessLogRoutes(server, db)
 	cleanup := func() { db.Close() }
 
 	return server, cleanup

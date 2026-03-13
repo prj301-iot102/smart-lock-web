@@ -4,14 +4,19 @@ import (
 	"context"
 
 	"github.com/go-fuego/fuego"
+	"github.com/go-fuego/fuego/option"
+	"github.com/go-fuego/fuego/param"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/middlewares"
+	"github.com/prj301-iot102/smart-lock-web/backend/internal/token"
 )
 
 type NfcResource struct {
-	db *pgxpool.Pool
+	db  *pgxpool.Pool
+	jwt *token.JwtAuth
 }
 
 func (nr *NfcResource) GetNfc(c fuego.ContextNoBody) (database.GetTagByIdRow, error) {
@@ -53,13 +58,10 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 
 	device, err := queries.GetDeviceByMac(ctx, req.DeviceMac)
 	if err != nil {
-		queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
-			EmployeeID: uuid.Nil,
-			Status:     database.StatusDenied,
-		})
-		return false, fuego.NotFoundError{
-			Detail: "Device not found",
-		}
+		// return false, fuego.NotFoundError{
+		// 	Detail: "Device not found",
+		// }
+		return false, nil
 	}
 
 	tag, err := queries.GetTagByUid(ctx, req.UID)
@@ -68,9 +70,11 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 			EmployeeID: uuid.Nil,
 			Status:     database.StatusDenied,
 		})
-		return false, fuego.NotFoundError{
-			Detail: "This tag does not exist",
-		}
+		// return false, fuego.NotFoundError{
+		// 	Detail: "This tag does not exist " + req.UID,
+		// }
+
+		return false, nil
 	}
 
 	employee, err := queries.GetEmployeeById(ctx, tag.EmployeeID)
@@ -80,9 +84,11 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 
 	door, err := queries.GetDoorByDeviceId(ctx, device.ID)
 	if err != nil {
-		return false, fuego.BadRequestError{
-			Detail: "This device is not on this door or door do not exists",
-		}
+		// return false, fuego.BadRequestError{
+		// 	Detail: "This device is not on this door or door do not exists",
+		// }
+
+		return false, nil
 	}
 
 	door_permisson, err := queries.GetDoorPermissonByDoorId(ctx, door.ID)
@@ -93,6 +99,8 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 	if employee.RoleName != door_permisson.RoleName {
 		queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
 			EmployeeID: employee.ID,
+			NfcTagID:   tag.ID,
+			DoorID:     door.ID,
 			Status:     database.StatusDenied,
 		})
 		return false, fuego.BadRequestError{}
@@ -100,6 +108,8 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 
 	queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
 		EmployeeID: employee.ID,
+		NfcTagID:   tag.ID,
+		DoorID:     door.ID,
 		Status:     database.StatusGranted,
 	})
 
@@ -149,6 +159,17 @@ func (nr *NfcResource) EnableCreate(c fuego.ContextNoBody) (bool, error) {
 	return true, nil
 }
 
+func (nr *NfcResource) ListNfcTags(c fuego.ContextNoBody) ([]database.ListNfcTagsRow, error) {
+	ctx := context.Background()
+	queries := database.New(nr.db)
+	tags, err := queries.ListNfcTags(ctx)
+	if err != nil {
+		return []database.ListNfcTagsRow{}, fuego.InternalServerError{}
+	}
+
+	return tags, nil
+}
+
 type CreateNfcRequest struct {
 	Uid string `json:"uid"`
 	Mac string `json:"mac_address"`
@@ -178,10 +199,18 @@ func (nc *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (str
 			Detail: "This device cannot create",
 		}
 	}
+	existNfc, _ := queries.CheckUidExist(ctx, req.Uid)
+	if existNfc.Uid != "" {
+		return "", fuego.BadRequestError{
+			Detail: "NFC already exists",
+		}
+	}
+
 	new_nfc, err := queries.CreateNfcTag(ctx, req.Uid)
 	if err != nil {
 		return "", fuego.BadRequestError{
 			Detail: "",
+			Err:    err,
 		}
 	}
 
@@ -193,16 +222,26 @@ func (nc *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (str
 	return new_nfc.String(), nil
 }
 
-func NfcRoute(s *fuego.Server, db *pgxpool.Pool) {
+func NfcRoute(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	rs := NfcResource{
-		db: db,
+		db:  db,
+		jwt: jwt,
 	}
+
+	authMiddleware := middlewares.NewAuthMiddleware(jwt)
 
 	group := fuego.Group(s, "/api/nfc")
 
-	fuego.Get(group, "/{id}", rs.GetNfc)
+	fuego.Get(group, "/", rs.ListNfcTags,
+		option.Middleware(authMiddleware.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
+	fuego.Get(group, "/{id}", rs.GetNfc,
+		option.Middleware(authMiddleware.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Post(group, "/validate", rs.ValidateNfc)
-	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc)
-	fuego.Patch(group, "/{device_id}/enable", rs.EnableCreate)
+	fuego.Patch(group, "/{id}/revoke", rs.RevokeNfc,
+		option.Middleware(authMiddleware.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
+
 	fuego.Post(group, "/create", rs.CreateNfc)
 }

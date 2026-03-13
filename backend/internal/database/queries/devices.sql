@@ -12,3 +12,7 @@ SET
     can_create = @can_create
 WHERE id = @id
 RETURNING id;
+
+-- name: ListDevices :many
+SELECT * FROM devices
+ORDER BY device_name;

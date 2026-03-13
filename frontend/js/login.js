@@ -30,7 +30,7 @@ loginForm.addEventListener("submit", async function(e){
             localStorage.setItem("token", data);
             window.location.href="dashboard.html";
         }else{
-            document.getElementById("error-msg").innerText = data.detail || "Login failed";
+            document.getElementById("error-msg").textContent = "Invalid username or password";
         }
     }catch(error){
         console.log("Error:", error)

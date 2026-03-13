@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${DB_PORT}:5432"
+      - "5432:5432"
     volumes:
       - smart_lock_psql:/var/lib/postgresql
     networks:
