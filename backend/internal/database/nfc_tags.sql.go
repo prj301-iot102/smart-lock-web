@@ -202,7 +202,7 @@ const updateTagStatus = `-- name: UpdateTagStatus :one
 UPDATE nfc_tags
 SET
     is_active = $1
-WHERE id = $2 AND is_active = true
+WHERE id = $2
 RETURNING id
 `
 

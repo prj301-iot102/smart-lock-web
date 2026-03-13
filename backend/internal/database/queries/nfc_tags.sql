@@ -7,7 +7,7 @@ RETURNING id;
 UPDATE nfc_tags
 SET
     is_active = @is_active
-WHERE id = @id AND is_active = true
+WHERE id = @id
 RETURNING id;
 
 -- name: ListNfcTags :many

@@ -40,6 +40,30 @@ func (nr *NfcResource) GetNfc(c fuego.ContextNoBody) (database.GetTagByIdRow, er
 	return nfc, nil
 }
 
+func (nr *NfcResource) ActiveNfc(c fuego.ContextNoBody) (string, error) {
+	nfc_id, err := uuid.Parse(c.PathParam("id"))
+	if err != nil {
+		return "", fuego.BadRequestError{
+			Detail: "Invalid uuid",
+		}
+	}
+
+	ctx := context.Background()
+	queries := database.New(nr.db)
+	nfc, err := queries.UpdateTagStatus(ctx, database.UpdateTagStatusParams{
+		ID:       nfc_id,
+		IsActive: true,
+	})
+	if err != nil {
+		return "", fuego.NotFoundError{
+			Detail: "Nfc id not exists",
+			Err:    err,
+		}
+	}
+
+	return nfc.String(), nil
+}
+
 type ValidateNfcRequest struct {
 	UID       string `json:"uid"`
 	DeviceMac string `json:"mac_device"`
@@ -236,6 +260,9 @@ func NfcRoute(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Get(group, "/{id}", rs.GetNfc,
+		option.Middleware(authMiddleware.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
+	fuego.Patch(group, "/{id}", rs.ActiveNfc,
 		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Post(group, "/validate", rs.ValidateNfc)
