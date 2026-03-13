@@ -83,6 +83,7 @@ async function listNfcTags() {
                     "Accept": "application/json, application/xml"
                 }
             }
+        }
         );
         if(!response.ok) {
             nfcMessage.textContent = "Failed to load NFC tags";

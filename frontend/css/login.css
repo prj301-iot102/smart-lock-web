@@ -1,82 +1,145 @@
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family:system-ui,-apple-system,sans-serif;
     margin: 0;
     padding: 0;
+    background-image: url(../images/loginwallpaper.png);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .login-container {
     display: flex;
-    align-items: center;
-    justify-content: center;
     height: 100vh;
 }
 
-.login-card {
-    background-color: #ffffff;
-    border: 1px solid #e1e5e9;
-    border-radius: 12px;
-    padding: 40px;
-    box-shadow:  
-        0 10px 25px rgba(0, 0, 0, 0.1),
-        0 20px 48px rgba(0, 0, 0, 0.1);
+/* Header */
+.header-container {
+    width:60%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .login-header {
-    text-align: center;
-    margin-bottom: 36px;
+    margin-bottom: 18%;
+    margin-right: 20%;
+
 }
 
-.login-header h2 {
-    color: #1e293b;
-    font-size: 1.875rem;
-    margin-bottom: 8px;
+.login-header h2{
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    color: #ffffff;
+    font-size: 50px;
+    font-weight: bold;
 }
 
-.login-card p {
+.login-header p {
+    margin: 0;
     text-align: center;
-    color: #64748b;
-    font-size: 15px;
+    color: #ffffff;
+    font-size: 25px;
     font-weight: 400;
+}
+
+.info-btn {
+    align-self: flex;
+    margin-top: 20px;
+}
+
+
+.info-btn {
+    padding: 12px 40px;
+    font-size: 16px;
+    border-radius: 30px;
+    border: none;
+    background-color: #006aff;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.info-btn:hover {
+    background-color: white;
+    color: #9ca3af;
+}
+
+/* Login card container */
+.card-container {
+    width: 45%;
+    display: flex;
+    flex-direction:column;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 15px;
+}
+
+.card-header {
+    font-size: larger;
+    margin-bottom: 30px;
+}
+
+.card-header h2 {
+    margin: 0;
+}
+
+.card-header p {
+    margin-top: 5px;
 }
 
 .form-group {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    border: 2px solid #e2e8f0;
+    border-radius: 15px;
+    
 }
 
-.form-group label {
-    font-size: 16px;
-    font-weight: 400;
+.form-group i {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 10px;
 }
 
 .form-group input {
-    background-color: #f8fafc;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
+    border: none;
     padding: 10px;
     color: #1e293b;
     font-size: 16px;
     font-weight: 400;
 }
 
+.form-group input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+
 .login-btn {
-    background-color: #00c2c7;
-    color: white;
     border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
     font-size: 16px;
     font-weight: 600;
     display: block;
     margin: 0 auto;
+    border-radius: 30px;
+    padding: 10px 150px;
+    background-color: #006aff;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    
 }
 
 .login-btn:hover {
-    background-color: #17a2b8;
+    background-color: #0053cc;
 }
 
 .login-btn:active {
-    background-color: #00c2c7;
+    background-color: #003d99;
 }
-

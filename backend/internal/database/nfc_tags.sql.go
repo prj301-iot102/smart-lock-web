@@ -12,6 +12,24 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const checkUidExist = `-- name: CheckUidExist :one
+SELECT nt.id, nt.uid
+FROM nfc_tags nt
+WHERE nt.uid = $1
+`
+
+type CheckUidExistRow struct {
+	ID  uuid.UUID `json:"id"`
+	Uid string    `json:"uid"`
+}
+
+func (q *Queries) CheckUidExist(ctx context.Context, uid string) (CheckUidExistRow, error) {
+	row := q.db.QueryRow(ctx, checkUidExist, uid)
+	var i CheckUidExistRow
+	err := row.Scan(&i.ID, &i.Uid)
+	return i, err
+}
+
 const createNfcTag = `-- name: CreateNfcTag :one
 INSERT INTO nfc_tags (uid)
 VALUES($1)
@@ -68,10 +86,10 @@ func (q *Queries) FilterTags(ctx context.Context, isActive pgtype.Bool) ([]Filte
 }
 
 const getTagById = `-- name: GetTagById :one
-SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, u.username, nt.created_at, nt.updated_at
+SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-JOIN users u ON u.id = nt.enrolled_by
+JOIN roles r ON r.id = e.role_id
 WHERE nt.id = $1
 `
 
@@ -81,7 +99,7 @@ type GetTagByIdRow struct {
 	IsActive   bool               `json:"is_active"`
 	EmployeeID uuid.UUID          `json:"employee_id"`
 	FullName   string             `json:"full_name"`
-	Username   string             `json:"username"`
+	RoleName   string             `json:"role_name"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
@@ -95,7 +113,7 @@ func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, 
 		&i.IsActive,
 		&i.EmployeeID,
 		&i.FullName,
-		&i.Username,
+		&i.RoleName,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -103,11 +121,9 @@ func (q *Queries) GetTagById(ctx context.Context, id uuid.UUID) (GetTagByIdRow, 
 }
 
 const getTagByUid = `-- name: GetTagByUid :one
-SELECT nt.id, nt.uid, e.full_name, nt.employee_id, r.role_name, u.username, nt.created_at, nt.updated_at
+SELECT nt.id, nt.uid, e.full_name, nt.employee_id, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-JOIN users u ON u.id = nt.enrolled_by
-JOIN roles r ON r.id = e.role_id
 WHERE nt.uid = $1
 `
 
@@ -116,8 +132,6 @@ type GetTagByUidRow struct {
 	Uid        string             `json:"uid"`
 	FullName   string             `json:"full_name"`
 	EmployeeID uuid.UUID          `json:"employee_id"`
-	RoleName   string             `json:"role_name"`
-	Username   string             `json:"username"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
@@ -130,12 +144,57 @@ func (q *Queries) GetTagByUid(ctx context.Context, uid string) (GetTagByUidRow, 
 		&i.Uid,
 		&i.FullName,
 		&i.EmployeeID,
-		&i.RoleName,
-		&i.Username,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listNfcTags = `-- name: ListNfcTags :many
+SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+JOIN roles r ON r.id = e.role_id
+`
+
+type ListNfcTagsRow struct {
+	ID         uuid.UUID          `json:"id"`
+	Uid        string             `json:"uid"`
+	IsActive   bool               `json:"is_active"`
+	EmployeeID uuid.UUID          `json:"employee_id"`
+	FullName   string             `json:"full_name"`
+	RoleName   string             `json:"role_name"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) ListNfcTags(ctx context.Context) ([]ListNfcTagsRow, error) {
+	rows, err := q.db.Query(ctx, listNfcTags)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListNfcTagsRow
+	for rows.Next() {
+		var i ListNfcTagsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Uid,
+			&i.IsActive,
+			&i.EmployeeID,
+			&i.FullName,
+			&i.RoleName,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateTagStatus = `-- name: UpdateTagStatus :one

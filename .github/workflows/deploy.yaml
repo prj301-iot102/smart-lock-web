@@ -5,8 +5,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-backend:
-    name: Build Backend
+  build:
+    name: Build
     runs-on: self-hosted
     permissions:
       contents: read
@@ -24,14 +24,18 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push image
+      - name: Build and push backend image
         run: |
           docker compose -f backend/compose.build.yml build
           docker compose -f backend/compose.build.yml push
+      - name: Build and push frontend image
+        run: |
+          docker compose -f frontend/compose.build.yml build
+          docker compose -f frontend/compose.build.yml push
 
-  deploy-backend:
-    name: Deploy Backend
-    needs: [build-backend]
+  deploy:
+    name: Deploy
+    needs: [build]
     runs-on: self-hosted
     permissions:
       contents: read
@@ -45,7 +49,7 @@ jobs:
       DB_PORT: ${{ secrets.DB_PORT }}
 
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_EXPIRES_IN: ${ secrets.JWT_EXPIRES_IN }}
+      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -55,7 +59,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Clean containers, image
-        run: docker compose -f backend/compose.yml -p smart-lock-backend down --rmi all -v
-      - name: Deploy
+      # - name: Clean containers, image
+      #   run: docker compose -f backend/compose.yml -p smart-lock-backend down --rmi all -v
+      - name: Remove old iamge
+        run: docker image prune -a -f
+      - name: Deploy Backend
         run: docker compose -f backend/compose.yml -p smart-lock-backend up -d
+      - name: Deploy Frontend
+        run: docker compose -f frontend/compose.yml -p smart-lock-frontend up -d

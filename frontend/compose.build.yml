@@ -1,0 +1,5 @@
+services:
+  smart_lock_web:
+    image: ${REGISTRY}/frontend:latest
+    build:
+      dockerfile: Dockerfile
