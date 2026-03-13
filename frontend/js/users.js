@@ -132,3 +132,10 @@ async function updatePassword() {
         console.log("Error updating password: ", error);
     }
 }
+
+var input = document.getElementById("userIdInput");
+input.addEventListener("keyup", function(e) {
+    if (e.keyCode = 13) {
+        getUserByID;
+    }
+});
