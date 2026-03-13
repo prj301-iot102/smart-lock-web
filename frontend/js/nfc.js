@@ -149,14 +149,14 @@ var btn = document.getElementsByClassName("searchbtn");
 input.addEventListener("keyup", function(e) {
     if (e.keyCode === 13) {
         e.preventDefault();
-        getNfcByID();
+        getNFC();
     }
 });
 
 document.addEventListener("click", function(e) {
     if (e.target.classList.contains("searchbtn")) {
         e.preventDefault();
-        getNfcByID();
+        getNFC();
     }
 });
 
