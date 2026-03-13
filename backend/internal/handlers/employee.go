@@ -26,8 +26,10 @@ type EmployeeResource struct {
 // ── Request types ─────────────────────────────────────────────────────
 
 type CreateEmployeeRequest struct {
-	FullName   string `json:"full_name"  validate:"required"`
-	Department string `json:"department" validate:"required"`
+	RoleID     uuid.UUID   `json:"role_id"`
+	Birth      pgtype.Date `json:"birth"`
+	FullName   string      `json:"full_name"  validate:"required"`
+	Department string      `json:"department" validate:"required"`
 }
 
 type UpdateEmployeeRequest struct {
@@ -298,7 +300,7 @@ func (er *EmployeeResource) GetEmployee(c fuego.ContextNoBody) (EmployeeResponse
 
 	row, err := database.New(er.db).GetEmployeeById(context.Background(), id)
 	if err != nil {
-		return EmployeeResponse{}, fuego.NotFoundError{Detail: "employee not found" + err.Error()}
+		return EmployeeResponse{}, fuego.NotFoundError{Detail: "employee not found " + err.Error()}
 	}
 
 	return getByIdToResponse(row), nil
@@ -317,7 +319,9 @@ func (er *EmployeeResource) CreateEmployee(c fuego.ContextWithBody[CreateEmploye
 
 	created, err := q.CreateEmployee(ctx, database.CreateEmployeeParams{
 		FullName:   req.FullName,
+		Birth:      req.Birth,
 		Department: req.Department,
+		RoleID:     req.RoleID,
 	})
 	if err != nil {
 		return created, fuego.InternalServerError{Detail: "failed to create employee: " + err.Error()}

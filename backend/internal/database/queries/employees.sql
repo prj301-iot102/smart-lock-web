@@ -1,8 +1,7 @@
 -- name: CreateEmployee :one
-INSERT INTO employees (full_name, department)
-VALUES ($1, $2)
+INSERT INTO employees (full_name, department, role_id, birth)
+SELECT $1, $2, $3, $4
 RETURNING id;
-
 
 -- name: GetEmployeeById :one
 SELECT
