@@ -3,12 +3,12 @@ async function getNFC() {
     const id = document.getElementById("nfcID").value.trim();
     const nfcStatus = document.getElementById("nfc-status");
     nfcStatus.innerHTML = ""
-    if(!id) {
+    if (!id) {
         nfcStatus.innerHTML = " : NOT AVAILABLE!!!"
         renderNFCInfo(nfc);
         return;
     }
-    try{
+    try {
         const response = await fetch(`https://smart-lock.patohru.qzz.io/api/nfc/${id}`, {
             method: "GET",
             headers: {
@@ -17,7 +17,7 @@ async function getNFC() {
             }
         }
         );
-        if(!response.ok) {
+        if (!response.ok) {
             nfcStatus.innerHTML = " : NOT FOUND!!!"
             renderNFCInfo(nfc);
             throw new Error("NFC not found");
@@ -25,13 +25,12 @@ async function getNFC() {
         nfcStatus.innerHTML = " : FOUND!!!"
         const nfc = await response.json();
         renderNFCInfo(nfc);
-        
-        });
+
         const data = await response.json();
 
         console.log(data);
 
-        if(response.ok){
+        if (response.ok) {
             const table = document.getElementById("nfcTableBody");
             table.innerHTML = `
                 <tr>
@@ -51,7 +50,7 @@ async function getNFC() {
         } else {
             document.getElementById("error-msg").innerText = data.message || "NFC not found";
         }
-    } catch(error) {
+    } catch (error) {
         console.log("Cannot connect to server")
     }
 }
@@ -69,7 +68,7 @@ function renderNFCInfo(nfc) {
 
 async function revokeNFC(id) {
     const token = localStorage.getItem("token");
-    if(!confirm("Are you sure to revoke this NFC tag?")) {
+    if (!confirm("Are you sure to revoke this NFC tag?")) {
         return;
     }
     try {
@@ -84,13 +83,13 @@ async function revokeNFC(id) {
 
         const data = await response.json();
 
-        if(response.ok) {
+        if (response.ok) {
             alert("NFC revoked successfully");
             getNFC();
         } else {
             alert(data.message || "Rovoke NFC failed");
         }
-    } catch(error) {
+    } catch (error) {
         console.log("Error: ", error)
     }
 }
@@ -112,14 +111,13 @@ async function listNfcTags() {
                     "Accept": "application/json, application/xml"
                 }
             }
-        }
         );
-        if(!response.ok) {
+        if (!response.ok) {
             nfcMessage.textContent = "Failed to load NFC tags";
             return;
         }
         const nfcTags = await response.json();
-        if(!nfcTags.data || nfcTags.data.length === 0) {
+        if (!nfcTags.data || nfcTags.data.length === 0) {
             nfcMessage.textContent = "No NFC tags found";
             return;
         }
@@ -141,7 +139,7 @@ async function listNfcTags() {
             `;
             table.appendChild(tableRow);
         });
-    } catch(error) {
+    } catch (error) {
         console.log("Error listing NFC Tags: ", error);
     }
 }
@@ -149,10 +147,10 @@ async function listNfcTags() {
 var input = document.getElementById("nfcID");
 var btn = document.getElementsByClassName("searchbtn");
 input.addEventListener("keyup", function(e) {
-  if (e.keyCode === 13) {
-    e.preventDefault();
-    getNfcByID();
-  }
+    if (e.keyCode === 13) {
+        e.preventDefault();
+        getNfcByID();
+    }
 });
 
 document.addEventListener("click", function(e) {
