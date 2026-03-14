@@ -9,8 +9,58 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const addDoorPermissionRole = `-- name: AddDoorPermissionRole :one
+INSERT INTO door_permissons(role_id, door_id)
+VALUES($1, $2)
+RETURNING id
+`
+
+type AddDoorPermissionRoleParams struct {
+	RoleID uuid.UUID `json:"role_id"`
+	DoorID uuid.UUID `json:"door_id"`
+}
+
+func (q *Queries) AddDoorPermissionRole(ctx context.Context, arg AddDoorPermissionRoleParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, addDoorPermissionRole, arg.RoleID, arg.DoorID)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const checkDoorPermissons = `-- name: CheckDoorPermissons :one
+SELECT dp.id
+FROM door_permissons dp
+JOIN roles r ON r.id = dp.role_id
+WHERE door_id = $1 AND role_id = $2
+`
+
+type CheckDoorPermissonsParams struct {
+	DoorID uuid.UUID `json:"door_id"`
+	RoleID uuid.UUID `json:"role_id"`
+}
+
+func (q *Queries) CheckDoorPermissons(ctx context.Context, arg CheckDoorPermissonsParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, checkDoorPermissons, arg.DoorID, arg.RoleID)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const deleteDoorPermissonRole = `-- name: DeleteDoorPermissonRole :exec
+DELETE FROM door_permissons WHERE door_id = $1 AND role_id = $2
+`
+
+type DeleteDoorPermissonRoleParams struct {
+	DoorID uuid.UUID `json:"door_id"`
+	RoleID uuid.UUID `json:"role_id"`
+}
+
+func (q *Queries) DeleteDoorPermissonRole(ctx context.Context, arg DeleteDoorPermissonRoleParams) error {
+	_, err := q.db.Exec(ctx, deleteDoorPermissonRole, arg.DoorID, arg.RoleID)
+	return err
+}
 
 const getDoorByDeviceId = `-- name: GetDoorByDeviceId :one
 SELECT id, door_name, device_id, created_at, updated_at FROM doors
@@ -31,7 +81,7 @@ func (q *Queries) GetDoorByDeviceId(ctx context.Context, deviceID uuid.UUID) (Do
 }
 
 const getDoorById = `-- name: GetDoorById :one
-SELECT id, door_name, device_id, created_at, updated_at FROM doors
+SELECT id, door_name, device_id, created_at, updated_at FROM doors d
 WHERE id = $1
 `
 
@@ -48,28 +98,59 @@ func (q *Queries) GetDoorById(ctx context.Context, id uuid.UUID) (Door, error) {
 	return i, err
 }
 
-const getDoorPermissonByDoorId = `-- name: GetDoorPermissonByDoorId :one
-SELECT dp.id, dp.door_id, r.role_name, dp.created_at
+const getDoorPermissonByDoorId = `-- name: GetDoorPermissonByDoorId :many
+SELECT r.role_name
 FROM door_permissons dp
 JOIN roles r ON r.id = dp.role_id
 WHERE door_id = $1
 `
 
-type GetDoorPermissonByDoorIdRow struct {
-	ID        uuid.UUID          `json:"id"`
-	DoorID    uuid.UUID          `json:"door_id"`
-	RoleName  string             `json:"role_name"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+func (q *Queries) GetDoorPermissonByDoorId(ctx context.Context, doorID uuid.UUID) ([]string, error) {
+	rows, err := q.db.Query(ctx, getDoorPermissonByDoorId, doorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var role_name string
+		if err := rows.Scan(&role_name); err != nil {
+			return nil, err
+		}
+		items = append(items, role_name)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
-func (q *Queries) GetDoorPermissonByDoorId(ctx context.Context, doorID uuid.UUID) (GetDoorPermissonByDoorIdRow, error) {
-	row := q.db.QueryRow(ctx, getDoorPermissonByDoorId, doorID)
-	var i GetDoorPermissonByDoorIdRow
-	err := row.Scan(
-		&i.ID,
-		&i.DoorID,
-		&i.RoleName,
-		&i.CreatedAt,
-	)
-	return i, err
+const listDoors = `-- name: ListDoors :many
+SELECT id, door_name, device_id, created_at, updated_at FROM doors
+`
+
+func (q *Queries) ListDoors(ctx context.Context) ([]Door, error) {
+	rows, err := q.db.Query(ctx, listDoors)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Door
+	for rows.Next() {
+		var i Door
+		if err := rows.Scan(
+			&i.ID,
+			&i.DoorName,
+			&i.DeviceID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
