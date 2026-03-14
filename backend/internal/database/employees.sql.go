@@ -46,6 +46,7 @@ SELECT
     e.id,
     e.full_name,
     e.birth,
+    e.role_id,
     r.role_name,
     e.department,
     e.created_at,
@@ -59,6 +60,7 @@ type GetEmployeeByIdRow struct {
 	ID         uuid.UUID          `json:"id"`
 	FullName   string             `json:"full_name"`
 	Birth      pgtype.Date        `json:"birth"`
+	RoleID     uuid.UUID          `json:"role_id"`
 	RoleName   string             `json:"role_name"`
 	Department string             `json:"department"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
@@ -72,6 +74,7 @@ func (q *Queries) GetEmployeeById(ctx context.Context, id uuid.UUID) (GetEmploye
 		&i.ID,
 		&i.FullName,
 		&i.Birth,
+		&i.RoleID,
 		&i.RoleName,
 		&i.Department,
 		&i.CreatedAt,

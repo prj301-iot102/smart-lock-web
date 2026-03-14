@@ -9,6 +9,7 @@ SELECT
     e.id,
     e.full_name,
     e.birth,
+    e.role_id,
     r.role_name,
     e.department,
     e.created_at,
