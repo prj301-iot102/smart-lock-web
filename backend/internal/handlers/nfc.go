@@ -115,12 +115,11 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 		return false, nil
 	}
 
-	door_permisson, err := queries.GetDoorPermissonByDoorId(ctx, door.ID)
+	_, err = queries.CheckDoorPermissons(ctx, database.CheckDoorPermissonsParams{
+		DoorID: door.ID,
+		RoleID: employee.RoleID,
+	})
 	if err != nil {
-		return false, fuego.InternalServerError{}
-	}
-
-	if employee.RoleName != door_permisson.RoleName {
 		queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
 			EmployeeID: employee.ID,
 			NfcTagID:   tag.ID,
@@ -129,6 +128,16 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 		})
 		return false, fuego.BadRequestError{}
 	}
+
+	// if employee.RoleName != door_permisson.RoleName {
+	// 	queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
+	// 		EmployeeID: employee.ID,
+	// 		NfcTagID:   tag.ID,
+	// 		DoorID:     door.ID,
+	// 		Status:     database.StatusDenied,
+	// 	})
+	// 	return false, fuego.BadRequestError{}
+	// }
 
 	queries.CreateAccessLog(ctx, database.CreateAccessLogParams{
 		EmployeeID: employee.ID,
