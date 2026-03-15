@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Door Management</title>
+</head>
+<body>
+    <div class="layout">
+        <div id="sidebar"></div>
+        <div class="main">
+            <h2>Doors Management</h2>
+            <div class="search-container">
+                <input type="text" id="doorIdInput" placeholder="Enter door ID">
+                <button type="button" onclick="getDoorByID()">Search</button>
+            </div>
+            <p id="searchMsg"></p>
+            <div class="doors-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Door Name</th>
+                            <th>Device ID</th>
+                            <th>Created At</th>
+                            <th>Updated At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doorsTableBody"></tbody>
+                </table>
+                <p id="doorsMsg"></p>
+            </div>
+            <div class="door-info">
+                <h3>Door Information</h3>
+                <div class="door-info-card">
+                    <p>
+                        <strong>ID :</strong>
+                        <span id="doorID"></span>
+                    </p>
+                    <p>
+                        <strong>Door Name :</strong>
+                        <span id="doorName"></span>
+                    </p>
+                    <p>
+                        <strong>Device ID :</strong>
+                        <span id="deviceID"></span>
+                    </p>
+                    <p>
+                        <strong>Access Roles :</strong>
+                        <div class="roles" id="roles"></div>
+                    </p>
+                    <p>
+                        <strong>Created At :</strong>
+                        <span id="createdAt"></span>
+                    </p>
+                    <p>
+                        <strong>Updated At :</strong>
+                        <span id="updatedAt"></span>
+                    </p>
+                    <div class="door-permission-actions">
+                        <div>
+                            <label for="roleIdInput">Role ID :</label>
+                            <input type="text" id="roleIdInput" placeholder="Enter role ID">
+                        </div>
+                        <button onclick="addDoorPermission()">Add Permission</button>
+                        <button onclick="deleteDoorPermission()">Delete Permission</button>
+                        <p id="permissionMsg"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/auth.js"></script>
+    <script src="js/loadSidebar.js"></script>
+    <script src="js/doors.js"></script>
+    <script src="js/logout.js"></script>
+</body>
+</html>
