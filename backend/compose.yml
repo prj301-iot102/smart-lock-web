@@ -2,14 +2,12 @@ services:
   postgres:
     image: postgres:latest
     container_name: smart-lock-database
-    restart: on-failure:5
+    restart: unless-stopped
     environment:
       PGDATA: /var/lib/postgresql/18/docker
       POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - 8080:8080
     volumes:
       - smart_lock_psql:/var/lib/postgresql
     networks:
@@ -39,6 +37,8 @@ services:
 
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+    ports:
+      - 8080:8080
     networks:
       - web
 
