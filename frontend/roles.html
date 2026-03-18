@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role Page</title>
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+</head>
+<body>
+    <div class="layout">
+        <div id="sidebar"></div>
+        <div class="main">
+            <h2>Role</h2>
+            <div class="search-container">
+                <input type="text" id="roleNameInput" placeholder="Enter role name">
+                <button type="button" onclick="searchRoleByName()">Search</button>
+            </div>
+            <div class="roles-table">
+                <h3>List of Roles</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Role Name</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rolesTableBody"></tbody>
+                </table>
+                <p id="rolesMsg"></p>
+            </div>
+        </div>
+    </div>
+    <script src="js/loadSidebar.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/roles.js"></script>
+    <script src="js/logout.js"></script>
+</body>
+</html>
