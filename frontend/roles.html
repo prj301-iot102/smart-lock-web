@@ -6,15 +6,18 @@
     <title>Role Page</title>
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/roles.css">
 </head>
 <body>
     <div class="layout">
         <div id="sidebar"></div>
         <div class="main">
-            <h2>Role</h2>
+            <div class="header">
+            <h2 class="header-title">Roles</h2>
             <div class="search-container">
+                <button class="searchbtn" type="button" onclick="searchRoleByName()"><i class="bi bi-search"></i></button>
                 <input type="text" id="roleNameInput" placeholder="Enter role name">
-                <button type="button" onclick="searchRoleByName()">Search</button>
+                </div>
             </div>
             <div class="roles-table">
                 <h3>List of Roles</h3>
