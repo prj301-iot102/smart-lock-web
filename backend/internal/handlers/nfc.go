@@ -255,6 +255,29 @@ func (nc *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (str
 	return new_nfc.String(), nil
 }
 
+type SearchByname struct{}
+
+type SearchByNameParam struct {
+	Name string `query:"name"`
+}
+
+func (nr *NfcResource) SearchByName(c fuego.Context[SearchByname, SearchByNameParam]) ([]database.SearchNfcByNameRow, error) {
+	nameQuery := "%" + c.QueryParam("name") + "%"
+
+	queries := database.New(nr.db)
+	ctx := context.Background()
+
+	nfcTags, err := queries.SearchNfcByName(ctx, nameQuery)
+	if err != nil {
+		return []database.SearchNfcByNameRow{}, fuego.InternalServerError{
+			Detail: "Unable to get NFC",
+			Err:    err,
+		}
+	}
+
+	return nfcTags, nil
+}
+
 func NfcRoute(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	rs := NfcResource{
 		db:  db,
@@ -266,6 +289,10 @@ func NfcRoute(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	group := fuego.Group(s, "/api/nfc")
 
 	fuego.Get(group, "/", rs.ListNfcTags,
+		option.Middleware(authMiddleware.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()),
+		option.Query("name", "Full name of employee", param.Required()))
+	fuego.Patch(group, "/", rs.SearchByName,
 		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Get(group, "/{id}", rs.GetNfc,
