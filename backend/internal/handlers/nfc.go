@@ -208,7 +208,7 @@ type CreateNfcRequest struct {
 	Mac string `json:"mac_address"`
 }
 
-func (nc *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (string, error) {
+func (nr *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (string, error) {
 	req, err := c.Body()
 	if err != nil {
 		return "", fuego.BadRequestError{
@@ -217,7 +217,7 @@ func (nc *NfcResource) CreateNfc(c fuego.ContextWithBody[CreateNfcRequest]) (str
 		}
 	}
 
-	queries := database.New(nc.db)
+	queries := database.New(nr.db)
 	ctx := context.Background()
 
 	device, err := queries.GetDeviceByMac(ctx, req.Mac)
