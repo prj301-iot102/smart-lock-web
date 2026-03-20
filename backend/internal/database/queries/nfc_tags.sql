@@ -29,6 +29,13 @@ FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
 WHERE nt.uid = @uid;
 
+-- name: SearchNfcByName :many
+SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+LEFT JOIN roles r ON r.id = e.role_id
+WHERE e.full_name LIKE sqlc.arg('full_name');
+
 -- name: CheckUidExist :one
 SELECT nt.id, nt.uid
 FROM nfc_tags nt
