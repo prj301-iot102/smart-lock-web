@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 table {
     width: 1300px;
     height: auto;
@@ -100,68 +104,57 @@ input:focus {
     outline: none;
 }
 
-.nfc-button {
-    display: flex;
+.doors-layout {
+    display:flex;
     flex-direction: row;
+    gap:20px;
 }
 
-.revoke {
-    border: #9ca3af 2px solid;
-    background: none;
-    width: 100px;
-    padding: 12px 10px;
-  
+.door-info{
+    display:flex;
+    width: 500px;
+    height: 100%;
+    flex-direction:column;
+    background-color: none;
+    border-radius: 12px;
+    margin: 0;
+}
+
+.door-info-card {
+    width: 380px;
+    padding: 0px 20px;
+    padding-bottom: 10px;
+    padding-top: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    background-color: #ffffff;
+}
+
+.roleDropdownContent {
+    display: none;
+    position: absolute;
+    width: 120px !important;
+    background: white;
+    border: 1px solid #ccc;
+    max-height: 200px;
+
+}
+
+.roleDropdownContent.show {
+    display: flex;
+    flex-direction: column;
+}
+
+.roleDropdown button {
     display: flex;
     align-items: center;
-    justify-content:left;
-    gap: 10px;
-    margin: 10px;
-  
-    font-size: 15px;
-    color: #374151;
-    cursor: pointer;
-  
-    border-radius: 8px;
-    transition: all 0.15s ease;
-}   
+    justify-content: center;
+    padding: 10px 20px;
+    width: 120px !important;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    color: black;
+    background-color: #fff;
 
-.revoke:hover {
-    background: rgba(255, 0, 0, 0.384);
+    
 }
-
-.revoke:active {
-    background: rgba(255, 0, 0, 0.5);
-}
-
-.check {
-    border: #9ca3af 2px solid;
-    background: none;
-    width: 100px;
-    padding: 12px 10px;
-  
-    display: flex;
-    align-items: center;
-    justify-content:left;
-    gap: 10px;
-    margin: 10px;
-  
-    font-size: 15px;
-    color: #374151;
-    cursor: pointer;
-  
-    border-radius: 8px;
-    transition: all 0.15s ease;
-}   
-
-.check:hover {
-    background: rgba(0, 255, 0, 0.384);
-}
-
-.check:active {
-    background: rgba(0, 255, 0, 0.5);
-}
-
-.nfcs-layout {
-    margin-top: 30px;
-}
-
