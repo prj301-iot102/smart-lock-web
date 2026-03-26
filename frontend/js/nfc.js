@@ -1,78 +1,68 @@
+document.addEventListener("DOMContentLoaded", () => {
+    listNfcTags();
+});
+
 async function getNFC() {
     const token = localStorage.getItem("token");
-    const id = document.getElementById("nfcID").value.trim();
-    const nfcStatus = document.getElementById("nfc-status");
-    nfcStatus.innerHTML = "";
-    if (!id) {
-        nfcStatus.innerHTML = " : NOT AVAILABLE!!!";
-        renderNFCInfo(nfc);
-        return;
-    }
+    const name = document.getElementById("nfcID").value.trim();
+    const table = document.getElementById("nfcTableBody");
+    const nfcMessage = document.getElementById("error-msg");
+
+    table.innerHTML = "";
+    nfcMessage.textContent = "";
+    console.log(name);
+    
     try {
         const response = await fetch(
-            `https://smart-lock.patohru.qzz.io/api/nfc/${id}`,
+            `https://smart-lock.patohru.qzz.io/api/nfc?name=${name}`,
             {
-                method: "GET",
+                method: "PATCH",
                 headers: {
                     Accept: "application/json, application/xml",
                     Authorization: `Bearer ${token}`,
                 },
             },
         );
+
         if (!response.ok) {
-            nfcStatus.innerHTML = " : NOT FOUND!!!";
-            renderNFCInfo(nfc);
-            throw new Error("NFC not found");
+            nfcMessage.textContent = "Failed to load NFC tags";
+            console.log("faile")
+            return;
         }
-        nfcStatus.innerHTML = " : FOUND!!!";
-        const nfc = await response.json();
-        renderNFCInfo(nfc);
-
+        
         const data = await response.json();
-
-        console.log(data);
-
-        if (response.ok) {
-            const table = document.getElementById("nfcTableBody");
-            table.innerHTML = `
-                <tr>
-                    <td>${data.id}</td>
-                    <td>${data.uid}</td>
-                    <td>${data.employee_id}</td>
-                    <td>${data.full_name}</td>
-                    <td>${data.role_name}</td>
-                    <td>${data.is_active}</td>
-                    <td>${data.created_at}</td>
-                    <td>${data.updated_at}</td>
-                    <td>
-                       <button onclick="revokeNFC('${data.id}')">Revoke</button>
-                    </td>
-                </tr>
+        data.forEach(nfc => {
+            console.log(nfc);
+            const tableRow = document.createElement("tr");
+            tableRow.innerHTML = `
+                <td>${nfc.id}</td>
+                <td>${nfc.uid}</td>
+                <td>${nfc.full_name}</td>
+                <td>${nfc.role_name}</td>
+                <td>${nfc.is_active}</td>
+                <td>${timeFormat(nfc.created_at)}</td>
+                <td>${timeFormat(nfc.updated_at)}</td>
+                <td>
+                    <div class="nfc-button">
+                        <button class="revoke" onclick="revokeNFC('${nfc.id}');">
+                            <i class="bi bi-trash3"></i>
+                            Revoke
+                        </button>
+                        <button class="check" onclick="activeNFC('${nfc.id}');">
+                            <i class="bi bi-check2"></i>
+                            Active
+                        </button>
+                    </div>
+                </td>
             `;
-        } else {
-            document.getElementById("error-msg").innerText =
-                data.message || "NFC not found";
-        }
+            table.appendChild(tableRow);
+        });
     } catch (error) {
-        console.log("Cannot connect to server");
+        console.log("Error listing NFC Tags: ", error);
     }
 }
 
-function renderNFCInfo(nfc) {
-    currentNfcID = nfc.id;
-    document.getElementById("nfcID").textContent = nfc.id;
-    document.getElementById("nfcUID").textContent = nfc.uid;
-    document.getElementById("employeeID").textContent = nfc.employee_id;
-    document.getElementById("fullName").textContent = nfc.full_name;
-    document.getElementById("status").textContent = nfc.is_active
-        ? "YES"
-        : "NO";
-    document.getElementById("createdAt").textContent = nfc.created_at;
-    document.getElementById("updatedAt").textContent = nfc.updated_at;
-}
-
-async function activeNFC() {
-    const id = document.getElementById("nfcID").value.trim();
+async function activeNFC(id) {
     const token = localStorage.getItem("token");
     if (!confirm("Are you sure to active this NFC tag?")) {
         return;
@@ -93,7 +83,7 @@ async function activeNFC() {
 
         if (response.ok) {
             alert("NFC active successfully");
-            getNFC();
+            listNfcTags();
         } else {
             alert(data.message || " NFC failed");
         }
@@ -102,12 +92,12 @@ async function activeNFC() {
     }
 }
 
-async function revokeNFC() {
-    const id = document.getElementById("nfcID").value.trim();
+async function revokeNFC(id) {
     const token = localStorage.getItem("token");
     if (!confirm("Are you sure to revoke this NFC tag?")) {
         return;
     }
+    console.log(id);
     try {
         const response = await fetch(
             `https://smart-lock.patohru.qzz.io/api/nfc/${id}/revoke`,
@@ -124,7 +114,7 @@ async function revokeNFC() {
 
         if (response.ok) {
             alert("NFC revoked successfully");
-            getNFC();
+            listNfcTags();
         } else {
             alert(data.message || "Rovoke NFC failed");
         }
@@ -143,7 +133,7 @@ async function listNfcTags() {
 
     try {
         const response = await fetch(
-            "https://smart-lock.patohru.qzz.io/api/nfc/",
+            "https://smart-lock.patohru.qzz.io/api/nfc?name=",
             {
                 method: "GET",
                 headers: {
@@ -156,25 +146,28 @@ async function listNfcTags() {
             nfcMessage.textContent = "Failed to load NFC tags";
             return;
         }
-        const nfcTags = await response.json();
-        if (!nfcTags.data || nfcTags.data.length === 0) {
-            nfcMessage.textContent = "No NFC tags found";
-            return;
-        }
-
-        nfcTags.data.forEach((nfc) => {
+        const data = await response.json();
+        data.forEach(nfc => {
             const tableRow = document.createElement("tr");
             tableRow.innerHTML = `
                 <td>${nfc.id}</td>
                 <td>${nfc.uid}</td>
-                <td>${nfc.employee_id}</td>
                 <td>${nfc.full_name}</td>
                 <td>${nfc.role_name}</td>
                 <td>${nfc.is_active}</td>
-                <td>${nfc.created_at}</td>
-                <td>${nfc.updated_at}</td>
+                <td>${timeFormat(nfc.created_at)}</td>
+                <td>${timeFormat(nfc.updated_at)}</td>
                 <td>
-                    <button onclick="revokeNFC('${nfc.id}')">Revoke</button>
+                    <div class="nfc-button">
+                        <button class="revoke" onclick="revokeNFC('${nfc.id}');">
+                            <i class="bi bi-trash3"></i>
+                            Revoke
+                        </button>
+                        <button class="check" onclick="activeNFC('${nfc.id}');">
+                            <i class="bi bi-check2"></i>
+                            Active
+                        </button>
+                    </div>
                 </td>
             `;
             table.appendChild(tableRow);
@@ -186,6 +179,7 @@ async function listNfcTags() {
 
 var input = document.getElementById("nfcID");
 var btn = document.getElementsByClassName("searchbtn");
+var listbtn = document.getElementById("listbtn");
 input.addEventListener("keyup", function (e) {
     if (e.keyCode === 13) {
         e.preventDefault();
@@ -193,13 +187,37 @@ input.addEventListener("keyup", function (e) {
     }
 });
 
-document.addEventListener("click", function (e) {
+btn.addEventListener("click", function (e) {
     if (e.target.classList.contains("searchbtn")) {
         e.preventDefault();
         getNFC();
     }
 });
 
+listbtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        listNfcTags();
+});
+
 document.addEventListener("DOMContentLoaded", () => {
     listNfcTags();
 });
+
+function timeFormat(isoString) {
+    const date = new Date(isoString);
+
+    const options = {
+        timeZone: "Asia/Ho_Chi_Minh",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour12: false
+    };
+
+    const parts = new Intl.DateTimeFormat("en-GB", options)
+        .formatToParts(date);
+
+    const get = type => parts.find(p => p.type === type).value;
+
+    return `${get("day")}/${get("month")}/${get("year")}`;
+}
