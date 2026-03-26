@@ -125,7 +125,7 @@ const getTagByUid = `-- name: GetTagByUid :one
 SELECT nt.id, nt.uid, e.full_name, nt.employee_id, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-WHERE nt.uid = $1
+WHERE nt.uid = $1 AND nt.is_active = true
 `
 
 type GetTagByUidRow struct {
@@ -178,6 +178,54 @@ func (q *Queries) ListNfcTags(ctx context.Context) ([]ListNfcTagsRow, error) {
 	var items []ListNfcTagsRow
 	for rows.Next() {
 		var i ListNfcTagsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Uid,
+			&i.IsActive,
+			&i.EmployeeID,
+			&i.FullName,
+			&i.RoleName,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchNfcByName = `-- name: SearchNfcByName :many
+SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at
+FROM nfc_tags nt
+JOIN employees e ON e.id = nt.employee_id
+LEFT JOIN roles r ON r.id = e.role_id
+WHERE e.full_name LIKE $1
+`
+
+type SearchNfcByNameRow struct {
+	ID         uuid.UUID               `json:"id"`
+	Uid        string                  `json:"uid"`
+	IsActive   bool                    `json:"is_active"`
+	EmployeeID uuid.UUID               `json:"employee_id"`
+	FullName   string                  `json:"full_name"`
+	RoleName   optional.Option[string] `json:"role_name"`
+	CreatedAt  pgtype.Timestamptz      `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz      `json:"updated_at"`
+}
+
+func (q *Queries) SearchNfcByName(ctx context.Context, fullName string) ([]SearchNfcByNameRow, error) {
+	rows, err := q.db.Query(ctx, searchNfcByName, fullName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchNfcByNameRow
+	for rows.Next() {
+		var i SearchNfcByNameRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Uid,
