@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function listLogs() {
+    const token = localStorage.getItem("token");
     const table = document.getElementById("logsTableBody");
     const totaltable = document.getElementById("totalAccess");
     const totalgranted = document.getElementById("granted");
@@ -13,8 +14,9 @@ async function listLogs() {
     try {
         const response = await fetch("https://smart-lock.patohru.qzz.io/api/accessLog/", 
             {
-                method: "GET", 
+                method: "GET",
                 headers: {
+                    "Authorization": `Bearer ${token}`,
                     "Accept": "application/json, application/xml"
                 }
             }

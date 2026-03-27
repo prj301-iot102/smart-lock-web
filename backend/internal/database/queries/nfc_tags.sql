@@ -27,7 +27,7 @@ WHERE nt.id = @id;
 SELECT nt.id, nt.uid, e.full_name, nt.employee_id, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-WHERE nt.uid = @uid;
+WHERE nt.uid = @uid AND nt.is_active = true;
 
 -- name: SearchNfcByName :many
 SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at

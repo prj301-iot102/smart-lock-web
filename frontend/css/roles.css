@@ -1,5 +1,6 @@
+
 table {
-    width: 1300px;
+    width: 1500px;
     height: auto;
     overflow-y: auto;
     background-color: #ffffff;
@@ -99,69 +100,3 @@ tbody td {
 input:focus {
     outline: none;
 }
-
-.nfc-button {
-    display: flex;
-    flex-direction: row;
-}
-
-.revoke {
-    border: #9ca3af 2px solid;
-    background: none;
-    width: 100px;
-    padding: 12px 10px;
-  
-    display: flex;
-    align-items: center;
-    justify-content:left;
-    gap: 10px;
-    margin: 10px;
-  
-    font-size: 15px;
-    color: #374151;
-    cursor: pointer;
-  
-    border-radius: 8px;
-    transition: all 0.15s ease;
-}   
-
-.revoke:hover {
-    background: rgba(255, 0, 0, 0.384);
-}
-
-.revoke:active {
-    background: rgba(255, 0, 0, 0.5);
-}
-
-.check {
-    border: #9ca3af 2px solid;
-    background: none;
-    width: 100px;
-    padding: 12px 10px;
-  
-    display: flex;
-    align-items: center;
-    justify-content:left;
-    gap: 10px;
-    margin: 10px;
-  
-    font-size: 15px;
-    color: #374151;
-    cursor: pointer;
-  
-    border-radius: 8px;
-    transition: all 0.15s ease;
-}   
-
-.check:hover {
-    background: rgba(0, 255, 0, 0.384);
-}
-
-.check:active {
-    background: rgba(0, 255, 0, 0.5);
-}
-
-.nfcs-layout {
-    margin-top: 30px;
-}
-

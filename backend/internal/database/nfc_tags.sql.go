@@ -125,7 +125,7 @@ const getTagByUid = `-- name: GetTagByUid :one
 SELECT nt.id, nt.uid, e.full_name, nt.employee_id, nt.created_at, nt.updated_at
 FROM nfc_tags nt
 JOIN employees e ON e.id = nt.employee_id
-WHERE nt.uid = $1
+WHERE nt.uid = $1 AND nt.is_active = true
 `
 
 type GetTagByUidRow struct {
