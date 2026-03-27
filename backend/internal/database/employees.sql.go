@@ -14,18 +14,25 @@ import (
 )
 
 const createEmployee = `-- name: CreateEmployee :one
-INSERT INTO employees (full_name, department)
-VALUES ($1, $2)
+INSERT INTO employees (full_name, department, role_id, birth)
+VALUES ($1, $2, $3, $4)
 RETURNING id
 `
 
 type CreateEmployeeParams struct {
-	FullName   string `json:"full_name"`
-	Department string `json:"department"`
+	FullName   string      `json:"full_name"`
+	Department string      `json:"department"`
+	RoleID     uuid.UUID   `json:"role_id"`
+	Birth      pgtype.Date `json:"birth"`
 }
 
 func (q *Queries) CreateEmployee(ctx context.Context, arg CreateEmployeeParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createEmployee, arg.FullName, arg.Department)
+	row := q.db.QueryRow(ctx, createEmployee,
+		arg.FullName,
+		arg.Department,
+		arg.RoleID,
+		arg.Birth,
+	)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err

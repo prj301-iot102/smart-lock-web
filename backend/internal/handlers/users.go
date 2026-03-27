@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/database"
 	"github.com/prj301-iot102/smart-lock-web/backend/internal/middlewares"
@@ -66,9 +68,16 @@ func (ur *UsersResource) CreateUser(c fuego.ContextWithBody[CreateUserRequest]) 
 
 	ctx := context.Background()
 	queries := database.New(ur.db)
+	// Insane hard code
+	internID, _ := uuid.Parse("906f48e9-82fb-4c70-8795-893e588918c7")
 	employeeID, err := queries.CreateEmployee(ctx, database.CreateEmployeeParams{
 		FullName:   req.FullName,
 		Department: req.Department,
+		RoleID:     internID,
+		Birth: pgtype.Date{
+			Time:  time.Now(),
+			Valid: true,
+		},
 	})
 	if err != nil {
 		return "", fuego.InternalServerError{
