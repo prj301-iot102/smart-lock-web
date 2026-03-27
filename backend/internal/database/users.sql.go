@@ -78,6 +78,47 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ge
 	return i, err
 }
 
+const listUsers = `-- name: ListUsers :many
+SELECT u.id, u.username,e.full_name, r.role_name,u.created_at
+FROM users u
+JOIN employees e ON e.id = u.employee_id
+JOIN roles r ON r.id = e.role_id
+`
+
+type ListUsersRow struct {
+	ID        uuid.UUID          `json:"id"`
+	Username  string             `json:"username"`
+	FullName  string             `json:"full_name"`
+	RoleName  string             `json:"role_name"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
+	rows, err := q.db.Query(ctx, listUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUsersRow
+	for rows.Next() {
+		var i ListUsersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.FullName,
+			&i.RoleName,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updatePassword = `-- name: UpdatePassword :exec
 UPDATE users
 SET

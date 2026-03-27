@@ -128,6 +128,21 @@ func (ur *UsersResource) UpdateUserPassword(c fuego.ContextWithBody[UpdatePasswo
 	return nil, nil
 }
 
+func (ur *UsersResource) ListUsers(c fuego.ContextNoBody) ([]database.ListUsersRow, error) {
+	ctx := context.Background()
+	queries := database.New(ur.db)
+	users, err := queries.ListUsers(ctx)
+	println(users)
+	if err != nil {
+		return []database.ListUsersRow{}, fuego.InternalServerError{
+			Detail: "Unable to list users",
+			Err:    err,
+		}
+	}
+
+	return users, nil
+}
+
 func UsersRoutes(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	rs := UsersResource{
 		db:  db,
@@ -141,6 +156,7 @@ func UsersRoutes(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 	fuego.Use(group, authMiddleware.RequireAuthentication)
 
 	fuego.Get(group, "/{id}", rs.GetUser)
+	fuego.Get(group, "/", rs.ListUsers)
 	fuego.Post(group, "/create", rs.CreateUser)
 	fuego.Patch(group, "/update", rs.UpdateUserPassword)
 
