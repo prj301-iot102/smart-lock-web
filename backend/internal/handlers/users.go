@@ -132,7 +132,6 @@ func (ur *UsersResource) ListUsers(c fuego.ContextNoBody) ([]database.ListUsersR
 	ctx := context.Background()
 	queries := database.New(ur.db)
 	users, err := queries.ListUsers(ctx)
-	println(users)
 	if err != nil {
 		return []database.ListUsersRow{}, fuego.InternalServerError{
 			Detail: "Unable to list users",
