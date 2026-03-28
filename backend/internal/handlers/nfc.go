@@ -149,6 +149,46 @@ func (nr *NfcResource) ValidateNfc(c fuego.ContextWithBody[ValidateNfcRequest]) 
 	return true, nil
 }
 
+type UpdateNfcRequest struct {
+	EmployeeID string `json:"employee_id"`
+}
+
+func (nr *NfcResource) UpdateNfc(c fuego.ContextWithBody[UpdateNfcRequest]) (string, error) {
+	nfc_id, err := uuid.Parse(c.PathParam("id"))
+	if err != nil {
+		return "", fuego.BadRequestError{
+			Detail: "Invalid nfc uuid",
+		}
+	}
+
+	req, err := c.Body()
+	if err != nil {
+		return "", fuego.BadRequestError{
+			Detail: "Invalid body",
+		}
+	}
+	employeeID, err := uuid.Parse(req.EmployeeID)
+	if err != nil {
+		return "", fuego.BadRequestError{
+			Detail: "Invalid employee uuid",
+		}
+	}
+
+	ctx := context.Background()
+	queries := database.New(nr.db)
+	dbNfcID, err := queries.UpdateNfcEmployee(ctx, database.UpdateNfcEmployeeParams{
+		EmployeeID: employeeID,
+		ID:         nfc_id,
+	})
+	if err != nil {
+		return "", fuego.BadRequestError{
+			Detail: "Nfc not found",
+		}
+	}
+
+	return dbNfcID.String(), nil
+}
+
 func (nr *NfcResource) RevokeNfc(c fuego.ContextNoBody) (bool, error) {
 	nfc_id, err := uuid.Parse(c.PathParam("id"))
 	if err != nil {
@@ -299,6 +339,9 @@ func NfcRoute(s *fuego.Server, db *pgxpool.Pool, jwt *token.JwtAuth) {
 		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Patch(group, "/{id}", rs.ActiveNfc,
+		option.Middleware(authMiddleware.RequireAuthentication),
+		option.Header("Authorization", "Bearer token", param.Required()))
+	fuego.Put(group, "/{id}", rs.UpdateNfc,
 		option.Middleware(authMiddleware.RequireAuthentication),
 		option.Header("Authorization", "Bearer token", param.Required()))
 	fuego.Post(group, "/validate", rs.ValidateNfc)
