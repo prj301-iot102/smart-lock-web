@@ -56,7 +56,6 @@ function hideCreateForm() {
 
 async function createUser() {
     const token = localStorage.getItem("token");
-
     const fullName = document.getElementById("fullName").value;
     const department = document.getElementById("department").value;
     const username = document.getElementById("username").value;
@@ -84,7 +83,7 @@ async function createUser() {
                 })
             }
         );
-
+        console.log(response);
         if(response.ok) {
             alert("User created successfully");
             hideCreateForm();
@@ -138,4 +137,45 @@ input.addEventListener("keyup", function(e) {
     if (e.keyCode = 13) {
         getUserByID;
     }
+});
+
+async function listUsers() {
+    const token = localStorage.getItem("token");
+    const table = document.getElementById("userTableBody");
+
+    table.innerHTML = "";
+
+    try {
+        const response = await fetch(`https://smart-lock.patohru.qzz.io/api/users/`, 
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/json, application/xml"
+                }
+            }
+        );
+        if(!response.ok) {
+            message.textContent = "User not found";
+            return;
+        }
+        const users = await response.json();
+        users.forEach(user => {
+            const tableRow = document.createElement("tr");
+            tableRow.innerHTML = `
+                <td>${user.id}</td>
+                <td>${user.full_name}</td>
+                <td>${user.username}</td>
+                <td>${user.role_name}</td>
+                <td>${user.created_at}</td>
+            `;
+            table.appendChild(tableRow);
+        });
+    } catch(error) {
+        console.log("Error getting user: ", error);
+    } 
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    listUsers();
 });
