@@ -49,3 +49,10 @@ WHERE
 (
     (sqlc.narg('is_active')::boolean IS NULL OR is_active = @is_active)
 );
+
+-- name: UpdateNfcEmployee :one
+UPDATE nfc_tags
+SET
+    employee_id = @employee_id
+WHERE id = @id
+RETURNING id;
