@@ -246,6 +246,26 @@ func (q *Queries) SearchNfcByName(ctx context.Context, fullName string) ([]Searc
 	return items, nil
 }
 
+const updateNfcEmployee = `-- name: UpdateNfcEmployee :one
+UPDATE nfc_tags
+SET
+    employee_id = $1
+WHERE id = $2
+RETURNING id
+`
+
+type UpdateNfcEmployeeParams struct {
+	EmployeeID uuid.UUID `json:"employee_id"`
+	ID         uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateNfcEmployee(ctx context.Context, arg UpdateNfcEmployeeParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, updateNfcEmployee, arg.EmployeeID, arg.ID)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const updateTagStatus = `-- name: UpdateTagStatus :one
 UPDATE nfc_tags
 SET
