@@ -77,13 +77,7 @@ func parseDate(s string) (pgtype.Date, error) {
 }
 
 func clampLimit(n int) int {
-	if n < 5 {
-		return 5
-	}
-	if n > 10 {
-		return 10
-	}
-	return n
+	return 10000
 }
 
 func getPagination(c fuego.ContextNoBody) (page, limit, offset int) {
