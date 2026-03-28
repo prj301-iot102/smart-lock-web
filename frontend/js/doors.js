@@ -85,7 +85,6 @@ async function loadRolesForDoors() {
 
         containers.forEach((container, i) => {
             const currentRoles = doors[i]?.roles || [];
-            console.log(doors[i].roles);
             container.innerHTML = "";
 
             roles.forEach(role => {
