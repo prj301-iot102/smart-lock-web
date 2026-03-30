@@ -1,6 +1,10 @@
 document.addEventListener("click", function(e) {
     if (e.target.id === "logoutBtn") {
-        localStorage.removeItem("token");
-        window.location.href = "./index.html";
+        const isConfirm = confirm("Are you sure?");
+
+        if (isConfirm) {
+            localStorage.removeItem("token");
+            window.location.replace("./index.html");
+        }
     }
 });
