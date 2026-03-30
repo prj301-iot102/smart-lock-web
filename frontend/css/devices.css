@@ -100,3 +100,50 @@ tbody td {
 input:focus {
     outline: none;
 }
+
+button{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border-radius: 20px;
+    padding: 0px 10px;
+    padding-right: 15px;
+}
+
+.createbtn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.enablebtn[data-enabled="true"] {
+    color: rgba(0, 255, 0, 0.5);
+}
+
+.enablebtn[data-enabled="false"] {
+    color: rgba(255, 0, 0, 0.5);
+}
+
+.enablebtn[data-enabled="false"]:hover {
+    background: rgba(255, 0, 0, 0.384);
+    color: black;
+}
+
+.enablebtn[data-enabled="false"]:active {
+    background: rgba(255, 0, 0, );
+    color: black;
+}
+
+.enablebtn[data-enabled="true"]:hover {
+    background: rgba(0, 255, 0, 0.384);
+    color: black;
+}
+
+.enablebtn[data-enabled="true"]:active {
+    background: rgba(0, 255, 0,);
+}
+
+.nfcs-layout {
+    margin-top: 30px;
+}

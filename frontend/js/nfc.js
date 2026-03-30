@@ -1,65 +1,49 @@
-document.addEventListener("DOMContentLoaded", () => {
+let employeeList = [];
+
+document.addEventListener("DOMContentLoaded", async() => {
+    await fetchEmployees();
     listNfcTags();
 });
 
-async function getNFC() {
+async function fetchEmployees() {
     const token = localStorage.getItem("token");
-    const name = document.getElementById("nfcID").value.trim();
-    const table = document.getElementById("nfcTableBody");
-    const nfcMessage = document.getElementById("error-msg");
-
-    table.innerHTML = "";
-    nfcMessage.textContent = "";
-    console.log(name);
-    
+ 
     try {
-        const response = await fetch(
-            `https://smart-lock.patohru.qzz.io/api/nfc?name=${name}`,
+        const response = await fetch(`https://smart-lock.patohru.qzz.io/api/employees/?page=1&limit=100`,
             {
-                method: "PATCH",
+                method: "GET",
                 headers: {
-                    Accept: "application/json, application/xml",
                     Authorization: `Bearer ${token}`,
+                    Accept: "application/json, application/xml",
                 },
-            },
+            }
         );
-
+ 
         if (!response.ok) {
-            nfcMessage.textContent = "Failed to load NFC tags";
-            console.log("faile")
+            console.warn("Failed to load employees");
             return;
         }
-        
-        const data = await response.json();
-        data.forEach(nfc => {
-            console.log(nfc);
-            const tableRow = document.createElement("tr");
-            tableRow.innerHTML = `
-                <td>${nfc.id}</td>
-                <td>${nfc.uid}</td>
-                <td>${nfc.full_name}</td>
-                <td>${nfc.role_name}</td>
-                <td>${nfc.is_active}</td>
-                <td>${timeFormat(nfc.created_at)}</td>
-                <td>${timeFormat(nfc.updated_at)}</td>
-                <td>
-                    <div class="nfc-button">
-                        <button class="revoke" onclick="revokeNFC('${nfc.id}');">
-                            <i class="bi bi-trash3"></i>
-                            Revoke
-                        </button>
-                        <button class="check" onclick="activeNFC('${nfc.id}');">
-                            <i class="bi bi-check2"></i>
-                            Active
-                        </button>
-                    </div>
-                </td>
-            `;
-            table.appendChild(tableRow);
-        });
+ 
+        const employees = await response.json();
+ 
+        if (!employees.data || employees.data.length === 0) {
+            return;
+        }
+ 
+        employeeList = employees.data;
+        console.log("Employees loaded:", employeeList);
     } catch (error) {
-        console.log("Error listing NFC Tags: ", error);
+        console.log("Error getting employees: ", error);
     }
+}
+
+function buildEmployeeOptions(selectedId) {
+    let option = "";
+    employeeList.forEach((e) => {
+        const selected = String(e.id) === String(selectedId) ? "selected" : "";
+        option += `<option value="${e.id}" ${selected}>${e.full_name}: ${e.id}</option>`;
+    });
+    return option;
 }
 
 async function activeNFC(id) {
@@ -152,6 +136,11 @@ async function listNfcTags() {
             tableRow.innerHTML = `
                 <td>${nfc.id}</td>
                 <td>${nfc.uid}</td>
+                <td>
+                    <select id="employeeSelect-${nfc.id}">
+                        ${buildEmployeeOptions(nfc.employee_id)}
+                    </select>
+                </td>
                 <td>${nfc.full_name}</td>
                 <td>${nfc.role_name}</td>
                 <td>${nfc.is_active}</td>
@@ -166,6 +155,10 @@ async function listNfcTags() {
                         <button class="check" onclick="activeNFC('${nfc.id}');">
                             <i class="bi bi-check2"></i>
                             Active
+                        </button>
+                        <button class="check" onclick="updateEmployeeID('${nfc.id}');">
+                            <i class="bi bi-floppy"></i>
+                            Save
                         </button>
                     </div>
                 </td>
@@ -200,6 +193,7 @@ listbtn.addEventListener("click", function (e) {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    fetchEmployees();
     listNfcTags();
 });
 
@@ -221,3 +215,37 @@ function timeFormat(isoString) {
 
     return `${get("day")}/${get("month")}/${get("year")}`;
 }
+
+async function updateEmployeeID(nfcId) {
+    const select = document.getElementById(`employeeSelect-${nfcId}`);
+
+    const employeeID = select.value
+    console.log(employeeID)
+    const token = localStorage.getItem("token");
+
+    try {
+        const response = await fetch(`https://smart-lock.patohru.qzz.io/api/nfc/${nfcId}`, 
+            {
+                method: "PUT", 
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/json, application/xml",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    employee_id: employeeID
+                })
+            }
+        );
+        console.log(response);
+        if(response.ok) {
+            alert("Updated ID successfully");
+        } else {
+            alert("Failed to Updated ID");
+            throw new Error("Failed to Updated ID");
+        }
+    } catch(error) {
+        console.log("Failed to Updated ID: ", error);
+    }; 
+}
+

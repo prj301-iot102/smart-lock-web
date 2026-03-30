@@ -19,6 +19,14 @@
                 <input type="text" id="userIdInput" placeholder="Enter user ID">
             </div>
                 <button class="createbtn" onclick="showCreateForm()">+</button>
+                <div id="userMessage">
+                    <button class="updatebtn" onclick="updatePassword()">Update</button>
+                    <div class="update-password">
+                    <div>
+                        <input type="password" id="newPassword" placeholder="New Password">
+                    </div>
+                </div>
+                </div>
             </div>
             <div class="feature-ui">
             <div class="user-table">
@@ -34,13 +42,7 @@
                     </thead>
                     <tbody id="userTableBody"></tbody>
                 </table>
-                <p id="userMessage"></p>
-                <div class="update-password">
-                <div>
-                    <input type="password" id="newPassword" placeholder="New Password">
-                </div>
-                <button onclick="updatePassword()">Update</button>
-            </div>
+
             </div>
             <div class="create-user">
                 <div id="createUserForm" class="hidden-form">

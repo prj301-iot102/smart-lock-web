@@ -6,18 +6,15 @@
     <title>Devices Management</title>
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/devices.css">  
 </head>
 <body>
     <div class="layout">
         <div id="sidebar"></div>
         <div class="main">
-            <h2>Devices Management</h2>
-            <div class="search-container">
-                <input type="text" id="deviceIdInput" placeholder="Enter device ID">
-                <button onclick="getDeviceByID()">Search</button>
-            </div>
+            <div class="header">
+            <h2 class="header-title">Devices Management</h2>
             <div class="devices-table">
-                <h3>Devices List</h3>
                 <table>
                     <thead>
                         <tr>
@@ -32,6 +29,7 @@
                 </table>
             </div>
         </div>
+    </div>
     </div>
     <script src="js/loadSidebar.js"></script>
     <script src="js/devices.js"></script>
