@@ -32,6 +32,7 @@ async function listLogs() {
             let date = new Date(log.created_at);
             let formatDate = new Intl.DateTimeFormat("vi-VN", {
                 timeZone: "Asia/Ho_Chi_Minh",
+                dateStyle: "full",
                 timeStyle: "short",
             }).format(date);
             const tableRow = document.createElement("tr");
