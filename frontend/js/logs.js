@@ -27,14 +27,14 @@ async function listLogs() {
         totaldenied.innerHTML = "";
         totalgranted.innerHTML = "";
         totaltable.innerHTML = "";
-        let date = new Date(log.created_at);
-        let formatDate = new Intl.DateTimeFormat("vi-VN", {
-            timeZone: "Asia/Ho_Chi_Minh",
-            month: "long",
-            year: "numeric",
-        }).format(date);
 
         data.forEach((log) => {
+            let date = new Date(log.created_at);
+            let formatDate = new Intl.DateTimeFormat("vi-VN", {
+                timeZone: "Asia/Ho_Chi_Minh",
+                month: "long",
+                year: "numeric",
+            }).format(date);
             const tableRow = document.createElement("tr");
             tableRow.innerHTML = `
                 <td>${formatDate}</td>
@@ -59,4 +59,3 @@ async function listLogs() {
         console.log("Error loading logs: ", error);
     }
 }
-
