@@ -154,19 +154,19 @@ func (q *Queries) GetTagByUid(ctx context.Context, uid string) (GetTagByUidRow, 
 const listNfcTags = `-- name: ListNfcTags :many
 SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at
 FROM nfc_tags nt
-JOIN employees e ON e.id = nt.employee_id
-JOIN roles r ON r.id = e.role_id
+LEFT JOIN employees e ON e.id = nt.employee_id
+LEFT JOIN roles r ON r.id = e.role_id
 `
 
 type ListNfcTagsRow struct {
-	ID         uuid.UUID          `json:"id"`
-	Uid        string             `json:"uid"`
-	IsActive   bool               `json:"is_active"`
-	EmployeeID uuid.UUID          `json:"employee_id"`
-	FullName   string             `json:"full_name"`
-	RoleName   string             `json:"role_name"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ID         uuid.UUID               `json:"id"`
+	Uid        string                  `json:"uid"`
+	IsActive   bool                    `json:"is_active"`
+	EmployeeID uuid.UUID               `json:"employee_id"`
+	FullName   optional.Option[string] `json:"full_name"`
+	RoleName   optional.Option[string] `json:"role_name"`
+	CreatedAt  pgtype.Timestamptz      `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz      `json:"updated_at"`
 }
 
 func (q *Queries) ListNfcTags(ctx context.Context) ([]ListNfcTagsRow, error) {

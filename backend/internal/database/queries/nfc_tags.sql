@@ -13,8 +13,8 @@ RETURNING id;
 -- name: ListNfcTags :many
 SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at
 FROM nfc_tags nt
-JOIN employees e ON e.id = nt.employee_id
-JOIN roles r ON r.id = e.role_id;
+LEFT JOIN employees e ON e.id = nt.employee_id
+LEFT JOIN roles r ON r.id = e.role_id;
 
 -- name: GetTagById :one
 SELECT nt.id, nt.uid, nt.is_active, nt.employee_id, e.full_name, r.role_name, nt.created_at, nt.updated_at
