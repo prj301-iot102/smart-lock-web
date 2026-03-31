@@ -7,49 +7,56 @@ async function listLogs() {
     const table = document.getElementById("logsTableBody");
     const totaltable = document.getElementById("totalAccess");
     const totalgranted = document.getElementById("granted");
-    const totaldenied = document.getElementById("denied")
+    const totaldenied = document.getElementById("denied");
     let total = 0;
     let granted = 0;
     let denied = 0;
     try {
-        const response = await fetch("https://smart-lock.patohru.qzz.io/api/accessLog/", 
+        const response = await fetch(
+            "https://smart-lock.patohru.qzz.io/api/accessLog/",
             {
                 method: "GET",
                 headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Accept": "application/json, application/xml"
-                }
-            }
+                    Authorization: `Bearer ${token}`,
+                    Accept: "application/json, application/xml",
+                },
+            },
         );
         const data = await response.json();
         table.innerHTML = "";
         totaldenied.innerHTML = "";
         totalgranted.innerHTML = "";
         totaltable.innerHTML = "";
+        let date = new Date(log.created_at);
+        let formatDate = new Intl.DateTimeFormat("vi-VN", {
+            timeZone: "Asia/Ho_Chi_Minh",
+            month: "long",
+            year: "numeric",
+        }).format(date);
 
-        data.forEach(log => {
+        data.forEach((log) => {
             const tableRow = document.createElement("tr");
             tableRow.innerHTML = `
-                <td>${log.created_at}</td>
+                <td>${formatDate}</td>
                 <td>${log.full_name}</td>
                 <td>${log.uid}</td>
                 <td>${log.status}</td>
             `;
-            total = total + 1
+            total = total + 1;
             table.appendChild(tableRow);
             if (log.status === "granted") {
                 tableRow.classList.add("granted");
-                granted++
+                granted++;
             } else {
                 tableRow.classList.add("denied");
-                denied++
+                denied++;
             }
         });
         totaldenied.innerHTML = denied;
         totalgranted.innerHTML = granted;
         totaltable.innerHTML = total;
-
-    } catch(error) {
+    } catch (error) {
         console.log("Error loading logs: ", error);
     }
 }
+
